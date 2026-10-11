@@ -1,348 +1,433 @@
+```dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../services/app_state_provider.dart';
 import '../widgets/timer_display.dart';
 import '../widgets/timer_controls.dart';
 import '../widgets/statistic_card.dart';
 
-/// Main Home screen containing greetings, study/break timer, controls,
-/// quick stat cards, and hydration logger.
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+const HomeScreen({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<AppStateProvider>(
-      builder: (context, appState, child) {
-        // Check if session completed to trigger congratulatory dialog
-        if (appState.justCompleted) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _showCompletionDialog(context, appState);
-          });
-        }
+static const Color primary = Color(0xFF00AFA6);
+static const Color blue = Color(0xFF4776E6);
+static const Color background = Color(0xFFF5F8FC);
 
-        final greeting = _getGreetingText();
-
-        return Scaffold(
-          backgroundColor: const Color(0xFFF7F9FC),
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Greeting & Profile Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            greeting,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.blueGrey[600],
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '${appState.userName} 👋',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blueGrey[900],
-                            ),
-                          ),
-                        ],
-                      ),
-                      // Hydration quick button badge
-                      InkWell(
-                        onTap: () {
-                          appState.addWaterGlass();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Great job! 💧 1 glass of water logged.'),
-                              duration: Duration(seconds: 2),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(20),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE0F7FA),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: const Color(0xFF80DEEA)),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.water_drop_rounded,
-                                  color: Color(0xFF00ACC1), size: 18),
-                              const SizedBox(width: 6),
-                              Text(
-                                '${appState.waterGlassesToday} Glasses',
-                                style: const TextStyle(
-                                  color: Color(0xFF00838F),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Timer Display Widget
-                  const TimerDisplay(),
-
-                  const SizedBox(height: 16),
-
-                  // Timer Controls Widget
-                  const TimerControls(),
-
-                  const SizedBox(height: 28),
-
-                  // Today's Quick Statistics Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Today\'s Progress',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blueGrey[900],
-                        ),
-                      ),
-                      Text(
-                        _getTodayFormattedDate(),
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Stat Cards Grid
-                  Row(
-                    children: [
-                      Expanded(
-                        child: StatisticCard(
-                          title: 'Study Time',
-                          value: '${appState.todayStudyMinutes}m',
-                          subtitle: 'Today\'s total',
-                          icon: Icons.timer_outlined,
-                          color: const Color(0xFF0288D1),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: StatisticCard(
-                          title: 'Sessions',
-                          value: '${appState.todayCompletedSessionsCount}',
-                          subtitle: 'Completed',
-                          icon: Icons.task_alt_rounded,
-                          color: const Color(0xFF4CAF50),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: StatisticCard(
-                          title: 'Water',
-                          value: '${appState.waterGlassesToday}',
-                          subtitle: 'Tap to +1 💧',
-                          icon: Icons.local_drink_rounded,
-                          color: const Color(0xFF00ACC1),
-                          onTap: () {
-                            appState.addWaterGlass();
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Hydration & Study Tip Banner
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE8F5E9),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFA5D6A7)),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFC8E6C9),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.emoji_objects_outlined,
-                            color: Color(0xFF2E7D32),
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Study Smart Tip 💡',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1B5E20),
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Taking 5-minute breaks every 25 minutes restores brain power and prevents fatigue. Don\'t forget to drink water!',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[800],
-                                  height: 1.3,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  /// Time of day greeting generator
-  String _getGreetingText() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) {
-      return 'Good Morning';
-    } else if (hour < 17) {
-      return 'Good Afternoon';
-    } else {
-      return 'Good Evening';
-    }
-  }
-
-  /// Today's formatted date string (e.g. "Mon, Oct 12")
-  String _getTodayFormattedDate() {
-    final now = DateTime.now();
-    final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return '${days[now.weekday - 1]}, ${months[now.month - 1]} ${now.day}';
-  }
-
-  /// Dialog shown when a study or break session finishes
-  void _showCompletionDialog(BuildContext context, AppStateProvider appState) {
-    final bool wasStudy = appState.currentMode == SessionMode.study;
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Row(
-            children: [
-              Icon(
-                wasStudy ? Icons.stars_rounded : Icons.coffee_rounded,
-                color: wasStudy ? const Color(0xFF0288D1) : const Color(0xFF4CAF50),
-                size: 28,
-              ),
-              const SizedBox(width: 10),
-              Text(
-                wasStudy ? 'Great Focus Session!' : 'Break Time Complete!',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                wasStudy
-                    ? 'Awesome job staying focused! You completed ${appState.studyDurationMins} minutes of study time.'
-                    : 'Your break is done! Hope you feel recharged and ready for the next session.',
-                style: const TextStyle(fontSize: 14),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE0F7FA),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.water_drop_rounded, color: Color(0xFF00ACC1)),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Reminder: Drink a glass of water now to stay hydrated! 💧',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF006064),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                appState.addWaterGlass();
-                appState.dismissCompletionDialog();
-                Navigator.of(context).pop();
-              },
-              child: const Text('Log Water 💧'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                appState.dismissCompletionDialog();
-                Navigator.of(context).pop();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    wasStudy ? const Color(0xFF4CAF50) : const Color(0xFF0288D1),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              child: Text(wasStudy ? 'Take Break' : 'Start Focus'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+@override
+Widget build(BuildContext context) {
+return Consumer<AppStateProvider>(
+builder: (context, appState, child) {
+if (appState.justCompleted) {
+WidgetsBinding.instance.addPostFrameCallback((_) {
+if (context.mounted && appState.justCompleted) {
+_showCompletionDialog(context, appState);
 }
+});
+}
+
+return Scaffold(
+backgroundColor: background,
+body: SafeArea(
+child: SingleChildScrollView(
+padding: const EdgeInsets.symmetric(
+horizontal: 18,
+vertical: 18,
+),
+child: Column(
+crossAxisAlignment: CrossAxisAlignment.start,
+children: [
+_buildHeader(context, appState),
+
+const SizedBox(height: 24),
+
+_buildWelcomeBanner(appState.userName),
+
+const SizedBox(height: 24),
+
+const TimerDisplay(),
+
+const SizedBox(height: 18),
+
+const TimerControls(),
+
+const SizedBox(height: 30),
+
+Row(
+mainAxisAlignment: MainAxisAlignment.spaceBetween,
+children: [
+const Text(
+"Today's Progress",
+style: TextStyle(
+fontSize: 20,
+fontWeight: FontWeight.bold,
+color: Color(0xFF172B4D),
+),
+),
+Text(
+_getTodayFormattedDate(),
+style: const TextStyle(
+color: Colors.blueGrey,
+fontSize: 12,
+),
+),
+],
+),
+
+const SizedBox(height: 14),
+
+Row(
+children: [
+Expanded(
+child: StatisticCard(
+title: 'Study Time',
+value: _formatMinutes(
+appState.todayStudyMinutes,
+),
+subtitle: 'Focused today',
+icon: Icons.timer_rounded,
+color: primary,
+),
+),
+const SizedBox(width: 10),
+Expanded(
+child: StatisticCard(
+title: 'Sessions',
+value:
+'${appState.todayCompletedSessionsCount}',
+subtitle: 'Completed',
+icon: Icons.task_alt_rounded,
+color: blue,
+),
+),
+const SizedBox(width: 10),
+Expanded(
+child: StatisticCard(
+title: 'Water',
+value: '${appState.waterGlassesToday}',
+subtitle: 'Glasses',
+icon: Icons.water_drop_rounded,
+color: const Color(0xFF00ACC1),
+onTap: () => _addWater(context, appState),
+),
+),
+],
+),
+
+const SizedBox(height: 22),
+
+_buildStudyTip(),
+
+const SizedBox(height: 18),
+],
+),
+),
+),
+);
+},
+);
+}
+
+Widget _buildHeader(
+BuildContext context,
+AppStateProvider appState,
+) {
+return Row(
+children: [
+Container(
+width: 48,
+height: 48,
+decoration: BoxDecoration(
+gradient: const LinearGradient(
+colors: [primary, blue],
+),
+borderRadius: BorderRadius.circular(16),
+),
+child: const Icon(
+Icons.self_improvement_rounded,
+color: Colors.white,
+size: 27,
+),
+),
+const SizedBox(width: 12),
+const Expanded(
+child: Column(
+crossAxisAlignment: CrossAxisAlignment.start,
+children: [
+Text(
+'BREAK BUDDY',
+style: TextStyle(
+fontSize: 11,
+fontWeight: FontWeight.bold,
+letterSpacing: 1.5,
+color: primary,
+),
+),
+SizedBox(height: 3),
+Text(
+'Your focus space',
+style: TextStyle(
+fontSize: 17,
+fontWeight: FontWeight.bold,
+color: Color(0xFF172B4D),
+),
+),
+],
+),
+),
+Material(
+color: const Color(0xFFE0F7FA),
+borderRadius: BorderRadius.circular(16),
+child: InkWell(
+borderRadius: BorderRadius.circular(16),
+onTap: () => _addWater(context, appState),
+child: Padding(
+padding: const EdgeInsets.symmetric(
+horizontal: 12,
+vertical: 10,
+),
+child: Row(
+children: [
+const Icon(
+Icons.water_drop_rounded,
+color: Color(0xFF00838F),
+size: 20,
+),
+const SizedBox(width: 6),
+Text(
+'${appState.waterGlassesToday}',
+style: const TextStyle(
+color: Color(0xFF00838F),
+fontWeight: FontWeight.bold,
+fontSize: 15,
+),
+),
+],
+),
+),
+),
+),
+],
+);
+}
+
+Widget _buildWelcomeBanner(String userName) {
+final hour = DateTime.now().hour;
+
+final greeting = hour < 12
+? 'Good Morning'
+    : hour < 17
+? 'Good Afternoon'
+    : 'Good Evening';
+
+return Container(
+width: double.infinity,
+padding: const EdgeInsets.all(22),
+decoration: BoxDecoration(
+gradient: const LinearGradient(
+colors: [primary, blue],
+begin: Alignment.topLeft,
+end: Alignment.bottomRight,
+),
+borderRadius: BorderRadius.circular(24),
+boxShadow: [
+BoxShadow(
+color: primary.withValues(alpha: 0.18),
+blurRadius: 18,
+offset: const Offset(0, 7),
+),
+],
+),
+child: Row(
+children: [
+Expanded(
+child: Column(
+crossAxisAlignment: CrossAxisAlignment.start,
+children: [
+Text(
+'$greeting 👋',
+style: const TextStyle(
+color: Colors.white70,
+fontSize: 14,
+),
+),
+const SizedBox(height: 8),
+Text(
+userName,
+maxLines: 1,
+overflow: TextOverflow.ellipsis,
+style: const TextStyle(
+color: Colors.white,
+fontSize: 24,
+fontWeight: FontWeight.bold,
+),
+),
+const SizedBox(height: 8),
+const Text(
+'Ready to make today productive?',
+style: TextStyle(
+color: Colors.white,
+fontSize: 12,
+),
+),
+],
+),
+),
+const SizedBox(width: 8),
+const Icon(
+Icons.auto_awesome_rounded,
+color: Colors.white70,
+size: 48,
+),
+],
+),
+);
+}
+
+Widget _buildStudyTip() {
+return Container(
+padding: const EdgeInsets.all(18),
+decoration: BoxDecoration(
+color: Colors.white,
+borderRadius: BorderRadius.circular(20),
+border: Border.all(
+color: const Color(0xFFE5EBF3),
+),
+),
+child: const Row(
+crossAxisAlignment: CrossAxisAlignment.start,
+children: [
+Icon(
+Icons.lightbulb_rounded,
+color: Color(0xFFE9A23B),
+size: 28,
+),
+SizedBox(width: 12),
+Expanded(
+child: Column(
+crossAxisAlignment: CrossAxisAlignment.start,
+children: [
+Text(
+'Focus Tip',
+style: TextStyle(
+fontSize: 15,
+fontWeight: FontWeight.bold,
+color: Color(0xFF172B4D),
+),
+),
+SizedBox(height: 6),
+Text(
+'Try focusing on one task at a time. Take regular breaks, stretch, and drink water to refresh your mind.',
+style: TextStyle(
+fontSize: 13,
+height: 1.5,
+color: Colors.blueGrey,
+),
+),
+],
+),
+),
+],
+),
+);
+}
+
+String _formatMinutes(int minutes) {
+if (minutes < 60) return '${minutes}m';
+
+final hours = minutes ~/ 60;
+final remaining = minutes % 60;
+
+return remaining == 0
+? '${hours}h'
+    : '${hours}h ${remaining}m';
+}
+
+String _getTodayFormattedDate() {
+final now = DateTime.now();
+const months = [
+'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+];
+const days = [
+'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun',
+];
+
+return '${days[now.weekday - 1]}, '
+'${months[now.month - 1]} ${now.day}';
+}
+
+void _addWater(
+BuildContext context,
+AppStateProvider appState,
+) {
+appState.addWaterGlass();
+
+ScaffoldMessenger.of(context).showSnackBar(
+const SnackBar(
+content: Text('Water logged successfully! 💧'),
+behavior: SnackBarBehavior.floating,
+duration: Duration(seconds: 2),
+),
+);
+}
+
+void _showCompletionDialog(
+BuildContext context,
+AppStateProvider appState,
+) {
+final bool wasStudy = appState.currentMode == SessionMode.study;
+
+showDialog<void>(
+context: context,
+barrierDismissible: false,
+builder: (dialogContext) {
+return AlertDialog(
+shape: RoundedRectangleBorder(
+borderRadius: BorderRadius.circular(24),
+),
+icon: Icon(
+wasStudy
+? Icons.emoji_events_rounded
+    : Icons.coffee_rounded,
+size: 48,
+color: wasStudy ? primary : blue,
+),
+title: Text(
+wasStudy ? 'Great Work!' : 'Break Completed!',
+textAlign: TextAlign.center,
+),
+content: Text(
+wasStudy
+? 'You completed ${appState.studyDurationMins} minutes of focused study. Keep going!'
+    : 'Your break is complete. Take a breath and get ready for your next task.',
+textAlign: TextAlign.center,
+),
+actionsAlignment: MainAxisAlignment.center,
+actions: [
+TextButton(
+onPressed: () {
+appState.addWaterGlass();
+appState.dismissCompletionDialog();
+Navigator.of(dialogContext).pop();
+},
+child: const Text('Log Water 💧'),
+),
+ElevatedButton(
+onPressed: () {
+appState.dismissCompletionDialog();
+Navigator.of(dialogContext).pop();
+},
+style: ElevatedButton.styleFrom(
+backgroundColor: primary,
+foregroundColor: Colors.white,
+),
+child: const Text('Continue'),
+),
+],
+);
+},
+);
+}
+}
+```
