@@ -19,28 +19,33 @@ void main() async {
   );
 }
 
-
 /// Root widget for Break Buddy application.
 class BreakBuddyApp extends StatelessWidget {
   const BreakBuddyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Break Buddy',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFD10202), // Light blue
-          primary: const Color(0xFF7E02D1),
-          secondary: const Color(0xFF4C77AF), // Soft Green
-          surface: const Color(0xFFF7F9FC),
-        ),
-        scaffoldBackgroundColor: const Color(0xFFF7F9FC),
-        fontFamily: 'Roboto',
-      ),
-      home: const MainNavigationScreen(),
+    return Consumer<AppStateProvider>(
+      builder: (context, appState, child) {
+        final primaryColor = appState.primaryThemeColor;
+
+        return MaterialApp(
+          title: 'Break Buddy',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: primaryColor,
+              primary: primaryColor,
+              secondary: const Color(0xFF4CAF50),
+              surface: const Color(0xFFF7F9FC),
+            ),
+            scaffoldBackgroundColor: const Color(0xFFF7F9FC),
+            fontFamily: 'Roboto',
+          ),
+          home: const MainNavigationScreen(),
+        );
+      },
     );
   }
 }
@@ -64,6 +69,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final appState = Provider.of<AppStateProvider>(context);
+    final primaryColor = appState.primaryThemeColor;
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -78,21 +86,21 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         },
         backgroundColor: Colors.white,
         elevation: 8,
-        indicatorColor: const Color(0xFFE1F5FE),
-        destinations: const [
+        indicatorColor: primaryColor.withAlpha(35),
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.timer_outlined),
-            selectedIcon: Icon(Icons.timer_rounded, color: Color(0xFF0288D1)),
+            icon: const Icon(Icons.timer_outlined),
+            selectedIcon: Icon(Icons.timer_rounded, color: primaryColor),
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
-            selectedIcon: Icon(Icons.bar_chart_rounded, color: Color(0xFF0288D1)),
+            icon: const Icon(Icons.bar_chart_outlined),
+            selectedIcon: Icon(Icons.bar_chart_rounded, color: primaryColor),
             label: 'History',
           ),
           NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings_rounded, color: Color(0xFF0288D1)),
+            icon: const Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings_rounded, color: primaryColor),
             label: 'Settings',
           ),
         ],

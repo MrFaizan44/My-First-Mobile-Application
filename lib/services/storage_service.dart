@@ -13,6 +13,9 @@ class StorageService {
   static const String _keySessionsHistory = 'sessions_history';
   static const String _keyWaterGlasses = 'water_glasses_today';
   static const String _keyWaterDate = 'water_date';
+  static const String _keyDailyGoalSessions = 'daily_goal_sessions';
+  static const String _keyThemePreset = 'theme_preset';
+  static const String _keySelectedSubject = 'selected_subject';
 
   /// Save timer durations in minutes
   Future<void> saveDurations({
@@ -36,19 +39,28 @@ class StorageService {
       'userName': prefs.getString(_keyUserName) ?? 'Scholar',
       'notificationsEnabled': prefs.getBool(_keyNotificationsEnabled) ?? true,
       'hydrationRemindersEnabled': prefs.getBool(_keyHydrationRemindersEnabled) ?? true,
+      'dailyGoalSessions': prefs.getInt(_keyDailyGoalSessions) ?? 4,
+      'themePreset': prefs.getString(_keyThemePreset) ?? 'blue',
+      'selectedSubject': prefs.getString(_keySelectedSubject) ?? 'General Focus 🧠',
     };
   }
 
-  /// Save user profile / preference settings
+  /// Save user profile & preference settings
   Future<void> saveUserSettings({
     required String userName,
     required bool notificationsEnabled,
     required bool hydrationRemindersEnabled,
+    required int dailyGoalSessions,
+    required String themePreset,
+    required String selectedSubject,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyUserName, userName);
     await prefs.setBool(_keyNotificationsEnabled, notificationsEnabled);
     await prefs.setBool(_keyHydrationRemindersEnabled, hydrationRemindersEnabled);
+    await prefs.setInt(_keyDailyGoalSessions, dailyGoalSessions);
+    await prefs.setString(_keyThemePreset, themePreset);
+    await prefs.setString(_keySelectedSubject, selectedSubject);
   }
 
   /// Load completed sessions history
@@ -85,7 +97,6 @@ class StorageService {
     final String? lastDate = prefs.getString(_keyWaterDate);
     final String todayStr = DateTime.now().toIso8601String().split('T')[0];
 
-    // Reset water count if new day
     if (lastDate != todayStr) {
       await prefs.setString(_keyWaterDate, todayStr);
       await prefs.setInt(_keyWaterGlasses, 0);

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/app_state_provider.dart';
 
-/// Settings screen for configuring study/break durations, notification preferences,
-/// user profile, and app resets.
+/// Enhanced Settings screen for configuring study/break durations, theme accents,
+/// daily study goals, notification preferences, user profile, and app resets.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -31,13 +31,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Consumer<AppStateProvider>(
       builder: (context, appState, child) {
+        final primaryColor = appState.primaryThemeColor;
+
         return Scaffold(
           backgroundColor: const Color(0xFFF7F9FC),
           appBar: AppBar(
             backgroundColor: Colors.white,
             elevation: 0.5,
             title: const Text(
-              'Settings',
+              'Settings & Preferences',
               style: TextStyle(
                 color: Color(0xFF263238),
                 fontWeight: FontWeight.bold,
@@ -50,8 +52,80 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // User Profile Section
-                  _buildSectionHeader('User Profile'),
+                  // User Profile & Daily Goal Section
+                  _buildSectionHeader('User Profile & Daily Goal'),
+                  Card(
+                    elevation: 1,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: primaryColor.withAlpha(30),
+                                radius: 24,
+                                child: Icon(Icons.person_rounded,
+                                    color: primaryColor, size: 28),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: TextField(
+                                  controller: _nameController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Student Name',
+                                    border: OutlineInputBorder(),
+                                    isDense: true,
+                                  ),
+                                  onChanged: (val) {
+                                    if (val.trim().isNotEmpty) {
+                                      appState.updateUserSettings(
+                                        userName: val.trim(),
+                                        notificationsEnabled:
+                                            appState.notificationsEnabled,
+                                        hydrationRemindersEnabled:
+                                            appState.hydrationRemindersEnabled,
+                                        dailyGoalSessions:
+                                            appState.dailyGoalSessions,
+                                        themePreset: appState.themePreset,
+                                      );
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Divider(height: 24),
+                          _buildSliderSetting(
+                            label: 'Daily Target Sessions',
+                            value: appState.dailyGoalSessions,
+                            min: 1,
+                            max: 12,
+                            color: primaryColor,
+                            unitLabel: 'sessions',
+                            onChanged: (newVal) {
+                              appState.updateUserSettings(
+                                userName: appState.userName,
+                                notificationsEnabled:
+                                    appState.notificationsEnabled,
+                                hydrationRemindersEnabled:
+                                    appState.hydrationRemindersEnabled,
+                                dailyGoalSessions: newVal.round(),
+                                themePreset: appState.themePreset,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Theme Color Customization Section
+                  _buildSectionHeader('Theme Accent Color'),
                   Card(
                     elevation: 1,
                     shape: RoundedRectangleBorder(
@@ -59,41 +133,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          const CircleAvatar(
-                            backgroundColor: Color(0xFFE1F5FE),
-                            radius: 24,
-                            child: Icon(Icons.person_rounded,
-                                color: Color(0xFF0288D1), size: 28),
+                          _buildThemeOption(
+                            context: context,
+                            appState: appState,
+                            presetKey: 'blue',
+                            label: 'Ocean Blue',
+                            color: const Color(0xFF0288D1),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: TextField(
-                              controller: _nameController,
-                              decoration: const InputDecoration(
-                                labelText: 'Student Name',
-                                border: OutlineInputBorder(),
-                                isDense: true,
-                              ),
-                              onChanged: (val) {
-                                if (val.trim().isNotEmpty) {
-                                  appState.updateUserSettings(
-                                    userName: val.trim(),
-                                    notificationsEnabled:
-                                        appState.notificationsEnabled,
-                                    hydrationRemindersEnabled:
-                                        appState.hydrationRemindersEnabled,
-                                  );
-                                }
-                              },
-                            ),
+                          _buildThemeOption(
+                            context: context,
+                            appState: appState,
+                            presetKey: 'green',
+                            label: 'Sage Green',
+                            color: const Color(0xFF2E7D32),
+                          ),
+                          _buildThemeOption(
+                            context: context,
+                            appState: appState,
+                            presetKey: 'purple',
+                            label: 'Lavender',
+                            color: const Color(0xFF7B1FA2),
+                          ),
+                          _buildThemeOption(
+                            context: context,
+                            appState: appState,
+                            presetKey: 'amber',
+                            label: 'Sunset',
+                            color: const Color(0xFFE65100),
                           ),
                         ],
                       ),
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
                   // Timer Durations Section
                   _buildSectionHeader('Timer Durations (Minutes)'),
@@ -110,7 +185,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             value: appState.studyDurationMins,
                             min: 5,
                             max: 90,
-                            color: const Color(0xFF0288D1),
+                            color: primaryColor,
+                            unitLabel: 'mins',
                             onChanged: (newVal) {
                               appState.updateTimerDurations(
                                 studyMins: newVal.round(),
@@ -126,6 +202,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             min: 1,
                             max: 30,
                             color: const Color(0xFF4CAF50),
+                            unitLabel: 'mins',
                             onChanged: (newVal) {
                               appState.updateTimerDurations(
                                 studyMins: appState.studyDurationMins,
@@ -141,6 +218,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             min: 5,
                             max: 60,
                             color: const Color(0xFF8E24AA),
+                            unitLabel: 'mins',
                             onChanged: (newVal) {
                               appState.updateTimerDurations(
                                 studyMins: appState.studyDurationMins,
@@ -154,7 +232,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
                   // Notifications & Preferences Section
                   _buildSectionHeader('Notifications & Reminders'),
@@ -169,8 +247,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               style: TextStyle(fontWeight: FontWeight.w600)),
                           subtitle: const Text(
                               'Alerts when focus or break sessions finish'),
-                          activeTrackColor: const Color(0xFF81D4FA),
-                          activeThumbColor: const Color(0xFF0288D1),
+                          activeTrackColor: primaryColor.withAlpha(100),
+                          activeThumbColor: primaryColor,
                           value: appState.notificationsEnabled,
                           onChanged: (val) {
                             appState.updateUserSettings(
@@ -178,6 +256,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               notificationsEnabled: val,
                               hydrationRemindersEnabled:
                                   appState.hydrationRemindersEnabled,
+                              dailyGoalSessions: appState.dailyGoalSessions,
+                              themePreset: appState.themePreset,
                             );
                           },
                         ),
@@ -196,6 +276,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               notificationsEnabled:
                                   appState.notificationsEnabled,
                               hydrationRemindersEnabled: val,
+                              dailyGoalSessions: appState.dailyGoalSessions,
+                              themePreset: appState.themePreset,
                             );
                           },
                         ),
@@ -203,9 +285,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
-                  // Actions & Reset Section
+                  // Data Reset Section
                   _buildSectionHeader('Data Management'),
                   Card(
                     elevation: 1,
@@ -239,9 +321,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 28),
 
-                  // App Version Info Footer
                   Center(
                     child: Column(
                       children: [
@@ -249,7 +330,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             size: 32, color: Colors.blueGrey[300]),
                         const SizedBox(height: 6),
                         Text(
-                          'Break Buddy v1.0.0',
+                          'Break Buddy v1.1.0',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.blueGrey[600],
@@ -281,10 +362,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Text(
         title,
         style: TextStyle(
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: FontWeight.bold,
           color: Colors.blueGrey[700],
         ),
+      ),
+    );
+  }
+
+  Widget _buildThemeOption({
+    required BuildContext context,
+    required AppStateProvider appState,
+    required String presetKey,
+    required String label,
+    required Color color,
+  }) {
+    final bool isSelected = appState.themePreset == presetKey;
+
+    return GestureDetector(
+      onTap: () {
+        appState.updateUserSettings(
+          userName: appState.userName,
+          notificationsEnabled: appState.notificationsEnabled,
+          hydrationRemindersEnabled: appState.hydrationRemindersEnabled,
+          dailyGoalSessions: appState.dailyGoalSessions,
+          themePreset: presetKey,
+        );
+      },
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: isSelected
+                  ? Border.all(color: color, width: 3)
+                  : Border.all(color: Colors.transparent, width: 3),
+            ),
+            child: CircleAvatar(
+              backgroundColor: color,
+              radius: 18,
+              child: isSelected
+                  ? const Icon(Icons.check, color: Colors.white, size: 20)
+                  : null,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: Colors.grey[800],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -295,6 +427,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required double min,
     required double max,
     required Color color,
+    required String unitLabel,
     required ValueChanged<double> onChanged,
   }) {
     return Column(
@@ -311,7 +444,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                '$value mins',
+                '$value $unitLabel',
                 style: TextStyle(
                   color: color,
                   fontWeight: FontWeight.bold,

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../services/app_state_provider.dart';
 
 /// Interactive circular timer display showing remaining time, progress ring,
-/// and current mode badge.
+/// active subject badge, and current mode status.
 class TimerDisplay extends StatelessWidget {
   const TimerDisplay({super.key});
 
@@ -13,14 +13,13 @@ class TimerDisplay extends StatelessWidget {
       builder: (context, appState, child) {
         final bool isBreak = appState.currentMode != SessionMode.study;
 
-        // Theme colors: Light blue for study, Soft green for break
         final Color primaryColor = isBreak
-            ? const Color(0xFF4CAF50) // Soft Green
-            : const Color(0xFF0288D1); // Light Blue
+            ? const Color(0xFF4CAF50)
+            : appState.primaryThemeColor;
 
         final Color backgroundColor = isBreak
-            ? const Color(0xFFE8F5E9) // Light Green tint
-            : const Color(0xFFE1F5FE); // Light Blue tint
+            ? const Color(0xFFE8F5E9)
+            : primaryColor.withAlpha(25);
 
         return Center(
           child: Container(
@@ -28,7 +27,19 @@ class TimerDisplay extends StatelessWidget {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Outer background track circle
+                // Outer glowing aura ring when running
+                if (appState.timerStatus == TimerStatus.running)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 500),
+                    width: 285,
+                    height: 285,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: primaryColor.withAlpha(15),
+                    ),
+                  ),
+
+                // Background track circle
                 SizedBox(
                   width: 270,
                   height: 270,
@@ -38,6 +49,7 @@ class TimerDisplay extends StatelessWidget {
                     valueColor: AlwaysStoppedAnimation<Color>(backgroundColor),
                   ),
                 ),
+
                 // Active animated progress indicator
                 SizedBox(
                   width: 270,
@@ -49,7 +61,8 @@ class TimerDisplay extends StatelessWidget {
                     valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
                   ),
                 ),
-                // Inner card container with timer text & badges
+
+                // Inner card container
                 Container(
                   width: 230,
                   height: 230,
@@ -58,7 +71,7 @@ class TimerDisplay extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: primaryColor.withAlpha(30),
+                        color: primaryColor.withAlpha(35),
                         blurRadius: 20,
                         spreadRadius: 4,
                         offset: const Offset(0, 6),
@@ -68,7 +81,7 @@ class TimerDisplay extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Mode Chip Badge
+                      // Mode & Subject Chip Badge
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 4),
@@ -77,16 +90,19 @@ class TimerDisplay extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          appState.modeLabel,
+                          !isBreak
+                              ? '${appState.selectedSubject} • ${appState.modeLabel}'
+                              : appState.modeLabel,
                           style: TextStyle(
                             color: primaryColor,
                             fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                            fontSize: 11,
                           ),
                         ),
                       ),
                       const SizedBox(height: 6),
-                      // Large Digital Timer MM:SS
+
+                      // Digital Countdown MM:SS
                       Text(
                         appState.formattedTime,
                         style: TextStyle(
@@ -97,7 +113,8 @@ class TimerDisplay extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      // Subtitle Status Message
+
+                      // Status Subtitle
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         child: Text(
@@ -112,6 +129,27 @@ class TimerDisplay extends StatelessWidget {
                           ),
                         ),
                       ),
+
+                      // Ambient Sound Badge Indicator
+                      if (appState.activeAmbientSound != 'None') ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.graphic_eq_rounded,
+                                size: 12, color: Color(0xFF4CAF50)),
+                            const SizedBox(width: 4),
+                            Text(
+                              appState.activeAmbientSound,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Color(0xFF2E7D32),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),

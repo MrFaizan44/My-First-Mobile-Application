@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/app_state_provider.dart';
 
-/// Timer mode selection tabs and control action buttons (Start, Pause, Resume, Reset).
+/// Timer mode selection tabs, subject selector, preset duration chips,
+/// and control action buttons (Start, Pause, Resume, Reset).
 class TimerControls extends StatelessWidget {
   const TimerControls({super.key});
 
@@ -12,8 +13,8 @@ class TimerControls extends StatelessWidget {
       builder: (context, appState, child) {
         final bool isBreak = appState.currentMode != SessionMode.study;
         final Color themeColor = isBreak
-            ? const Color(0xFF4CAF50) // Soft Green
-            : const Color(0xFF0288D1); // Light Blue
+            ? const Color(0xFF4CAF50)
+            : appState.primaryThemeColor;
 
         return Column(
           children: [
@@ -32,7 +33,7 @@ class TimerControls extends StatelessWidget {
                     appState: appState,
                     mode: SessionMode.study,
                     label: 'Study (${appState.studyDurationMins}m)',
-                    activeColor: const Color(0xFF0288D1),
+                    activeColor: appState.primaryThemeColor,
                   ),
                   _buildModeTab(
                     context: context,
@@ -51,26 +52,66 @@ class TimerControls extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            // Primary Action Buttons
+            const SizedBox(height: 16),
+
+            // Subject Tag Selector (when idle and in Study Mode)
+            if (appState.currentMode == SessionMode.study &&
+                appState.timerStatus == TimerStatus.idle) ...[
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: appState.availableSubjects.map((subject) {
+                    final bool isSelected = appState.selectedSubject == subject;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      child: ChoiceChip(
+                        label: Text(
+                          subject,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight:
+                                isSelected ? FontWeight.bold : FontWeight.normal,
+                            color: isSelected ? Colors.white : Colors.grey[800],
+                          ),
+                        ),
+                        selected: isSelected,
+                        selectedColor: appState.primaryThemeColor,
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        onSelected: (selected) {
+                          if (selected) {
+                            appState.setSelectedSubject(subject);
+                          }
+                        },
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // Action Control Buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Start / Pause / Resume Primary Button
                 if (appState.timerStatus == TimerStatus.idle ||
                     appState.timerStatus == TimerStatus.completed) ...[
                   ElevatedButton.icon(
                     onPressed: () => appState.startTimer(),
                     icon: const Icon(Icons.play_arrow_rounded, size: 28),
                     label: const Text(
-                      'START',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      'START FOCUS',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: themeColor,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 40, vertical: 16),
+                          horizontal: 36, vertical: 14),
                       elevation: 4,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
@@ -83,29 +124,29 @@ class TimerControls extends StatelessWidget {
                     icon: const Icon(Icons.pause_rounded, size: 28),
                     label: const Text(
                       'PAUSE',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.amber[800],
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 32, vertical: 16),
+                          horizontal: 28, vertical: 14),
                       elevation: 4,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 14),
                   OutlinedButton.icon(
                     onPressed: () => appState.resetTimer(),
-                    icon: const Icon(Icons.refresh_rounded, size: 24),
+                    icon: const Icon(Icons.refresh_rounded, size: 22),
                     label: const Text('RESET'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.grey[700],
                       side: BorderSide(color: Colors.grey[400]!, width: 1.5),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 16),
+                          horizontal: 20, vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
@@ -117,29 +158,29 @@ class TimerControls extends StatelessWidget {
                     icon: const Icon(Icons.play_arrow_rounded, size: 28),
                     label: const Text(
                       'RESUME',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: themeColor,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 32, vertical: 16),
+                          horizontal: 28, vertical: 14),
                       elevation: 4,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 14),
                   OutlinedButton.icon(
                     onPressed: () => appState.resetTimer(),
-                    icon: const Icon(Icons.refresh_rounded, size: 24),
+                    icon: const Icon(Icons.refresh_rounded, size: 22),
                     label: const Text('RESET'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.grey[700],
                       side: BorderSide(color: Colors.grey[400]!, width: 1.5),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 16),
+                          horizontal: 20, vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),

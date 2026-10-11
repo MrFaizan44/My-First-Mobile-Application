@@ -5,8 +5,8 @@ import '../widgets/timer_display.dart';
 import '../widgets/timer_controls.dart';
 import '../widgets/statistic_card.dart';
 
-/// Main Home screen containing greetings, study/break timer, controls,
-/// quick stat cards, and hydration logger.
+/// Enhanced Home screen with greeting header, study streak, daily goal progress,
+/// quote generator, ambient sound bar, timer, controls, and quick stats.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -14,7 +14,6 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AppStateProvider>(
       builder: (context, appState, child) {
-        // Check if session completed to trigger congratulatory dialog
         if (appState.justCompleted) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _showCompletionDialog(context, appState);
@@ -22,16 +21,17 @@ class HomeScreen extends StatelessWidget {
         }
 
         final greeting = _getGreetingText();
+        final primaryColor = appState.primaryThemeColor;
 
         return Scaffold(
           backgroundColor: const Color(0xFFF7F9FC),
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Greeting & Profile Header
+                  // Top Header: Greeting, Streak & Hydration Quick Log
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -41,7 +41,7 @@ class HomeScreen extends StatelessWidget {
                           Text(
                             greeting,
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 13,
                               fontWeight: FontWeight.w600,
                               color: Colors.blueGrey[600],
                             ),
@@ -50,73 +50,252 @@ class HomeScreen extends StatelessWidget {
                           Text(
                             '${appState.userName} 👋',
                             style: TextStyle(
-                              fontSize: 24,
+                              fontSize: 22,
                               fontWeight: FontWeight.bold,
                               color: Colors.blueGrey[900],
                             ),
                           ),
                         ],
                       ),
-                      // Hydration quick button badge
-                      InkWell(
-                        onTap: () {
-                          appState.addWaterGlass();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Great job! 💧 1 glass of water logged.'),
-                              duration: Duration(seconds: 2),
-                              behavior: SnackBarBehavior.floating,
+                      Row(
+                        children: [
+                          // Streak Counter Badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.orange[50],
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.orange[200]!),
                             ),
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(20),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE0F7FA),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: const Color(0xFF80DEEA)),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.water_drop_rounded,
-                                  color: Color(0xFF00ACC1), size: 18),
-                              const SizedBox(width: 6),
-                              Text(
-                                '${appState.waterGlassesToday} Glasses',
-                                style: const TextStyle(
-                                  color: Color(0xFF00838F),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
+                            child: Row(
+                              children: [
+                                const Icon(Icons.local_fire_department_rounded,
+                                    color: Colors.orange, size: 18),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${appState.studyStreakDays}d Streak',
+                                  style: const TextStyle(
+                                    color: Colors.deepOrange,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
+                          const SizedBox(width: 8),
+                          // Water Intake Badge
+                          InkWell(
+                            onTap: () {
+                              appState.addWaterGlass();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Great job! 💧 1 glass of water logged.'),
+                                  duration: Duration(seconds: 2),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE0F7FA),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: const Color(0xFF80DEEA)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.water_drop_rounded,
+                                      color: Color(0xFF00ACC1), size: 18),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${appState.waterGlassesToday}💧',
+                                    style: const TextStyle(
+                                      color: Color(0xFF00838F),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Daily Goal Progress Banner
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withAlpha(20),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.track_changes_rounded,
+                                    color: primaryColor, size: 20),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Daily Goal Progress',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blueGrey[800],
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Text(
+                              '${appState.todayCompletedSessionsCount} / ${appState.dailyGoalSessions} Sessions',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: primaryColor,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: LinearProgressIndicator(
+                            value: appState.dailyGoalProgress,
+                            minHeight: 8,
+                            backgroundColor: primaryColor.withAlpha(30),
+                            valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Motivational Quote Card
+                  InkWell(
+                    onTap: () => appState.nextQuote(),
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withAlpha(15),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.format_quote_rounded,
+                              color: primaryColor, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              appState.currentQuote,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.blueGrey[800],
+                              ),
+                            ),
+                          ),
+                          Icon(Icons.refresh_rounded,
+                              size: 16, color: primaryColor),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Circular Timer Display
+                  const TimerDisplay(),
+
+                  const SizedBox(height: 12),
+
+                  // Timer Controls & Subject Selector
+                  const TimerControls(),
+
+                  const SizedBox(height: 20),
+
+                  // Ambient Focus Sounds Selector
+                  Row(
+                    children: [
+                      Icon(Icons.headphones_rounded,
+                          size: 18, color: Colors.blueGrey[700]),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Ambient Focus Sounds',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blueGrey[800],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 8),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: appState.availableAmbientSounds.map((sound) {
+                        final bool isSelected =
+                            appState.activeAmbientSound == sound;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 6.0),
+                          child: ActionChip(
+                            avatar: isSelected
+                                ? const Icon(Icons.volume_up_rounded, size: 14)
+                                : null,
+                            label: Text(
+                              sound,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.grey[800],
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                            backgroundColor: isSelected
+                                ? const Color(0xFF4CAF50)
+                                : Colors.white,
+                            onPressed: () => appState.setAmbientSound(sound),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
 
-                  // Timer Display Widget
-                  const TimerDisplay(),
+                  const SizedBox(height: 24),
 
-                  const SizedBox(height: 16),
-
-                  // Timer Controls Widget
-                  const TimerControls(),
-
-                  const SizedBox(height: 28),
-
-                  // Today's Quick Statistics Header
+                  // Today's Progress Cards Header
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Today\'s Progress',
+                        'Today\'s Summary',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.blueGrey[900],
                         ),
@@ -124,15 +303,15 @@ class HomeScreen extends StatelessWidget {
                       Text(
                         _getTodayFormattedDate(),
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 12,
                           color: Colors.grey[600],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
-                  // Stat Cards Grid
+                  // Quick Stat Cards Row
                   Row(
                     children: [
                       Expanded(
@@ -141,10 +320,10 @@ class HomeScreen extends StatelessWidget {
                           value: '${appState.todayStudyMinutes}m',
                           subtitle: 'Today\'s total',
                           icon: Icons.timer_outlined,
-                          color: const Color(0xFF0288D1),
+                          color: primaryColor,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: StatisticCard(
                           title: 'Sessions',
@@ -154,12 +333,12 @@ class HomeScreen extends StatelessWidget {
                           color: const Color(0xFF4CAF50),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: StatisticCard(
-                          title: 'Water',
+                          title: 'Water Log',
                           value: '${appState.waterGlassesToday}',
-                          subtitle: 'Tap to +1 💧',
+                          subtitle: 'Tap +1 💧',
                           icon: Icons.local_drink_rounded,
                           color: const Color(0xFF00ACC1),
                           onTap: () {
@@ -170,58 +349,6 @@ class HomeScreen extends StatelessWidget {
                     ],
                   ),
 
-                  const SizedBox(height: 20),
-
-                  // Hydration & Study Tip Banner
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE8F5E9),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFA5D6A7)),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFC8E6C9),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.emoji_objects_outlined,
-                            color: Color(0xFF2E7D32),
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Study Smart Tip 💡',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1B5E20),
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Taking 5-minute breaks every 25 minutes restores brain power and prevents fatigue. Don\'t forget to drink water!',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[800],
-                                  height: 1.3,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                   const SizedBox(height: 16),
                 ],
               ),
@@ -232,7 +359,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  /// Time of day greeting generator
   String _getGreetingText() {
     final hour = DateTime.now().hour;
     if (hour < 12) {
@@ -244,7 +370,6 @@ class HomeScreen extends StatelessWidget {
     }
   }
 
-  /// Today's formatted date string (e.g. "Mon, Oct 12")
   String _getTodayFormattedDate() {
     final now = DateTime.now();
     final months = [
@@ -255,7 +380,6 @@ class HomeScreen extends StatelessWidget {
     return '${days[now.weekday - 1]}, ${months[now.month - 1]} ${now.day}';
   }
 
-  /// Dialog shown when a study or break session finishes
   void _showCompletionDialog(BuildContext context, AppStateProvider appState) {
     final bool wasStudy = appState.currentMode == SessionMode.study;
 
@@ -271,7 +395,7 @@ class HomeScreen extends StatelessWidget {
             children: [
               Icon(
                 wasStudy ? Icons.stars_rounded : Icons.coffee_rounded,
-                color: wasStudy ? const Color(0xFF0288D1) : const Color(0xFF4CAF50),
+                color: wasStudy ? appState.primaryThemeColor : const Color(0xFF4CAF50),
                 size: 28,
               ),
               const SizedBox(width: 10),
@@ -286,7 +410,7 @@ class HomeScreen extends StatelessWidget {
             children: [
               Text(
                 wasStudy
-                    ? 'Awesome job staying focused! You completed ${appState.studyDurationMins} minutes of study time.'
+                    ? 'Awesome job! You completed ${appState.studyDurationMins} minutes of study in ${appState.selectedSubject}.'
                     : 'Your break is done! Hope you feel recharged and ready for the next session.',
                 style: const TextStyle(fontSize: 14),
               ),
@@ -332,7 +456,7 @@ class HomeScreen extends StatelessWidget {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor:
-                    wasStudy ? const Color(0xFF4CAF50) : const Color(0xFF0288D1),
+                    wasStudy ? const Color(0xFF4CAF50) : appState.primaryThemeColor,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
