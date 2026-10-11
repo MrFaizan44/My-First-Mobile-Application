@@ -1,13 +1,18 @@
 
 body: AnimatedSwitcher(
-duration: const Duration(milliseconds: 300),
-switchInCurve: Curves.easeOutCubic,
-switchOutCurve: Curves.easeInCubic,
+duration: const Duration(milliseconds: 450),
+switchInCurve: Curves.easeOutBack,
+switchOutCurve: Curves.easeIn,
 transitionBuilder: (child, animation) {
 final slideAnimation = Tween<Offset>(
-begin: const Offset(0.04, 0),
+begin: const Offset(0, 0.08),
 end: Offset.zero,
-).animate(animation);
+).animate(
+CurvedAnimation(
+parent: animation,
+curve: Curves.easeOutCubic,
+),
+);
 
 return FadeTransition(
 opacity: animation,
