@@ -20,6 +20,9 @@ class StorageService {
   static const String _keySessionsHistory = 'sessions_history';
   static const String _keyWaterGlasses = 'water_glasses_today';
   static const String _keyWaterDate = 'water_date';
+  static const String _keyDailyGoalSessions = 'daily_goal_sessions';
+  static const String _keyThemePreset = 'theme_preset';
+  static const String _keySelectedSubject = 'selected_subject';
 
   // Save timer durations after validating the values.
   Future<void> saveDurations({
@@ -58,6 +61,7 @@ class StorageService {
         15,
       ),
       'userName': prefs.getString(_keyUserName) ?? 'Scholar',
+<<<<<<< HEAD
       'notificationsEnabled':
       prefs.getBool(_keyNotificationsEnabled) ?? true,
       'hydrationRemindersEnabled':
@@ -70,12 +74,27 @@ class StorageService {
   }
 
   // Save user preferences.
+=======
+      'notificationsEnabled': prefs.getBool(_keyNotificationsEnabled) ?? true,
+      'hydrationRemindersEnabled': prefs.getBool(_keyHydrationRemindersEnabled) ?? true,
+      'dailyGoalSessions': prefs.getInt(_keyDailyGoalSessions) ?? 4,
+      'themePreset': prefs.getString(_keyThemePreset) ?? 'blue',
+      'selectedSubject': prefs.getString(_keySelectedSubject) ?? 'General Focus 🧠',
+    };
+  }
+
+  /// Save user profile & preference settings
+>>>>>>> 9767c7eb43a25ab2a83e45be8b6861fc20b0b00c
   Future<void> saveUserSettings({
     required String userName,
     required bool notificationsEnabled,
     required bool hydrationRemindersEnabled,
+    required int dailyGoalSessions,
+    required String themePreset,
+    required String selectedSubject,
   }) async {
     final prefs = await SharedPreferences.getInstance();
+<<<<<<< HEAD
 
     await prefs.setString(
       _keyUserName,
@@ -91,6 +110,14 @@ class StorageService {
       _keyHydrationRemindersEnabled,
       hydrationRemindersEnabled,
     );
+=======
+    await prefs.setString(_keyUserName, userName);
+    await prefs.setBool(_keyNotificationsEnabled, notificationsEnabled);
+    await prefs.setBool(_keyHydrationRemindersEnabled, hydrationRemindersEnabled);
+    await prefs.setInt(_keyDailyGoalSessions, dailyGoalSessions);
+    await prefs.setString(_keyThemePreset, themePreset);
+    await prefs.setString(_keySelectedSubject, selectedSubject);
+>>>>>>> 9767c7eb43a25ab2a83e45be8b6861fc20b0b00c
   }
 
   // Load completed study sessions.
@@ -147,8 +174,13 @@ class StorageService {
     final today = _todayString();
     final savedDate = prefs.getString(_keyWaterDate);
 
+<<<<<<< HEAD
     if (savedDate != today) {
       await prefs.setString(_keyWaterDate, today);
+=======
+    if (lastDate != todayStr) {
+      await prefs.setString(_keyWaterDate, todayStr);
+>>>>>>> 9767c7eb43a25ab2a83e45be8b6861fc20b0b00c
       await prefs.setInt(_keyWaterGlasses, 0);
       return 0;
     }
