@@ -19,6 +19,7 @@ void main() async {
   );
 }
 
+
 /// Root widget for Break Buddy application.
 class BreakBuddyApp extends StatelessWidget {
   const BreakBuddyApp({super.key});
@@ -31,9 +32,9 @@ class BreakBuddyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0288D1), // Light Blue
-          primary: const Color(0xFF0288D1),
-          secondary: const Color(0xFF4CAF50), // Soft Green
+          seedColor: const Color(0xFFD10202), // Light blue
+          primary: const Color(0xFF7E02D1),
+          secondary: const Color(0xFF4C77AF), // Soft Green
           surface: const Color(0xFFF7F9FC),
         ),
         scaffoldBackgroundColor: const Color(0xFFF7F9FC),
