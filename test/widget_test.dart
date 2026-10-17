@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:campus_os/main.dart';
+import 'package:study_tasker/main.dart';
+import 'package:study_tasker/widgets/study_tasker_logo.dart';
 
 void main() {
   setUpAll(() {
@@ -8,11 +9,11 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   });
 
-  testWidgets('CampusOS smoke test', (WidgetTester tester) async {
-    await tester.pumpWidget(const CampusOSApp());
+  testWidgets('StudyTasker smoke test', (WidgetTester tester) async {
+    await tester.pumpWidget(const StudyTaskerApp());
 
-    // Verify main screen branding and tabs
-    expect(find.textContaining('CampusOS'), findsWidgets);
+    // Verify main screen logo and bottom navigation tabs
+    expect(find.byType(StudyTaskerLogo), findsWidgets);
     expect(find.textContaining('Home'), findsOneWidget);
     expect(find.textContaining('My Schedule'), findsOneWidget);
     expect(find.textContaining('Assignments'), findsOneWidget);

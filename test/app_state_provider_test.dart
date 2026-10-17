@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:campus_os/models/subject_model.dart';
-import 'package:campus_os/models/schedule_block_model.dart';
-import 'package:campus_os/models/class_note_model.dart';
-import 'package:campus_os/models/assignment_model.dart';
-import 'package:campus_os/theme/app_theme.dart';
+import 'package:study_tasker/models/subject_model.dart';
+import 'package:study_tasker/models/schedule_block_model.dart';
+import 'package:study_tasker/models/class_note_model.dart';
+import 'package:study_tasker/models/assignment_model.dart';
+import 'package:study_tasker/theme/app_theme.dart';
 
 void main() {
   setUpAll(() {
@@ -12,7 +12,7 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   });
 
-  group('CampusOS Models & Notifications Tests', () {
+  group('StudyTasker Models & Notifications Tests', () {
     test('SubjectModel instantiation & color test', () {
       final subject = SubjectModel(
         id: 1,
