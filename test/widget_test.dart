@@ -1,20 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
-import 'package:break_buddy/main.dart';
-import 'package:break_buddy/services/app_state_provider.dart';
+import 'package:campus_os/main.dart';
 
 void main() {
-  testWidgets('Break Buddy app smoke test', (WidgetTester tester) async {
-    final appStateProvider = AppStateProvider();
+  testWidgets('CampusOS app smoke test', (WidgetTester tester) async {
+    await tester.pumpWidget(const CampusOSApp());
 
-    await tester.pumpWidget(
-      ChangeNotifierProvider<AppStateProvider>.value(
-        value: appStateProvider,
-        child: const BreakBuddyApp(),
-      ),
-    );
-
-    // Verify Home navigation title or greeting exists
-    expect(find.textContaining('Focus'), findsWidgets);
+    // Verify Home screen header text exists
+    expect(find.textContaining('CampusOS'), findsWidgets);
+    expect(find.textContaining('Welcome Back'), findsOneWidget);
   });
 }

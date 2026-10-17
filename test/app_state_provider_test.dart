@@ -1,46 +1,49 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:break_buddy/models/study_session.dart';
-import 'package:break_buddy/services/app_state_provider.dart';
+import 'package:campus_os/models/course_model.dart';
+import 'package:campus_os/models/task_model.dart';
+import 'package:campus_os/models/attendance_model.dart';
+import 'package:campus_os/theme/app_theme.dart';
 
 void main() {
-  group('StudySession Model Tests', () {
-    test('Should convert StudySession to and from JSON correctly', () {
-      final now = DateTime.now();
-      final session = StudySession(
-        id: '12345',
-        sessionType: 'study',
-        durationMinutes: 25,
-        timestamp: now,
-        subject: 'Math Study',
+  group('CampusOS Models Tests', () {
+    test('CourseModel instantiation test', () {
+      final course = CourseModel(
+        id: '1',
+        code: 'CS301',
+        title: 'Data Structures',
+        instructor: 'Prof. Jenkins',
+        room: '402B',
+        scheduleTime: '10:00 AM',
+        backgroundColor: AppTheme.pastelBlue,
+        borderColor: AppTheme.pastelBlueBorder,
       );
 
-      final jsonStr = session.toJson();
-      final decodedSession = StudySession.fromJson(jsonStr);
-
-      expect(decodedSession.id, equals('12345'));
-      expect(decodedSession.sessionType, equals('study'));
-      expect(decodedSession.durationMinutes, equals(25));
-      expect(decodedSession.displayType, equals('Study Focus'));
-      expect(decodedSession.subject, equals('Math Study'));
-    });
-  });
-
-  group('AppStateProvider Logic Tests', () {
-    test('Default mode should be Study with 25 minutes', () {
-      final appState = AppStateProvider();
-      expect(appState.currentMode, equals(SessionMode.study));
-      expect(appState.studyDurationMins, equals(25));
-      expect(appState.formattedTime, equals('25:00'));
-      expect(appState.timerStatus, equals(TimerStatus.idle));
+      expect(course.code, equals('CS301'));
+      expect(course.room, equals('402B'));
     });
 
-    test('Switching mode should update time and total duration', () {
-      final appState = AppStateProvider();
-      appState.setSessionMode(SessionMode.shortBreak);
+    test('AttendanceModel percentage calculation test', () {
+      final attendance = AttendanceModel(
+        courseCode: 'CS301',
+        courseTitle: 'Data Structures',
+        attendedClasses: 18,
+        totalClasses: 20,
+      );
 
-      expect(appState.currentMode, equals(SessionMode.shortBreak));
-      expect(appState.formattedTime, equals('05:00'));
-      expect(appState.timerStatus, equals(TimerStatus.idle));
+      expect(attendance.percentage, equals(90.0));
+      expect(attendance.status, contains('Safe'));
+    });
+
+    test('TaskModel default completion state test', () {
+      final task = TaskModel(
+        id: '1',
+        title: 'Assignment 1',
+        courseCode: 'CS301',
+        dueDate: DateTime.now(),
+      );
+
+      expect(task.isCompleted, isFalse);
+      expect(task.priority, equals('Medium'));
     });
   });
 }
