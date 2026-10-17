@@ -8,6 +8,7 @@ import 'screens/settings_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+
   final appStateProvider = AppStateProvider();
   await appStateProvider.init();
 
