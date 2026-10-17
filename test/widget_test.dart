@@ -1,12 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:campus_os/main.dart';
 
 void main() {
-  testWidgets('CampusOS app smoke test', (WidgetTester tester) async {
+  setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  });
+
+  testWidgets('CampusOS Part 1 smoke test', (WidgetTester tester) async {
     await tester.pumpWidget(const CampusOSApp());
 
-    // Verify Home screen header text exists
+    // Verify main screen branding and tabs
     expect(find.textContaining('CampusOS'), findsWidgets);
-    expect(find.textContaining('Welcome Back'), findsOneWidget);
+    expect(find.textContaining('Home'), findsOneWidget);
+    expect(find.textContaining('My Schedule'), findsOneWidget);
+    expect(find.textContaining('Class Notes'), findsOneWidget);
   });
 }
