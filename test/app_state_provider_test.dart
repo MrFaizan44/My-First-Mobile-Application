@@ -3,6 +3,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:campus_os/models/subject_model.dart';
 import 'package:campus_os/models/schedule_block_model.dart';
 import 'package:campus_os/models/class_note_model.dart';
+import 'package:campus_os/models/assignment_model.dart';
 import 'package:campus_os/theme/app_theme.dart';
 
 void main() {
@@ -11,7 +12,7 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   });
 
-  group('CampusOS Part 1 Models Tests', () {
+  group('CampusOS Models & Notifications Tests', () {
     test('SubjectModel instantiation & color test', () {
       final subject = SubjectModel(
         id: 1,
@@ -25,6 +26,21 @@ void main() {
       expect(subject.name, equals('Data Structures'));
       expect(subject.code, equals('CS101'));
       expect(subject.instructor, equals('Dr. Smith'));
+    });
+
+    test('AssignmentModel instantiation test', () {
+      final assignment = AssignmentModel(
+        id: 10,
+        courseId: 1,
+        title: 'Project 1 Draft',
+        description: 'Submit PDF report',
+        dueDate: DateTime.now().add(const Duration(days: 3)),
+        courseCode: 'CS101',
+      );
+
+      expect(assignment.title, equals('Project 1 Draft'));
+      expect(assignment.courseCode, equals('CS101'));
+      expect(assignment.isCompleted, isFalse);
     });
 
     test('ScheduleBlockModel day name helper test', () {

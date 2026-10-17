@@ -8,13 +8,14 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   });
 
-  testWidgets('CampusOS Part 1 smoke test', (WidgetTester tester) async {
+  testWidgets('CampusOS smoke test', (WidgetTester tester) async {
     await tester.pumpWidget(const CampusOSApp());
 
     // Verify main screen branding and tabs
     expect(find.textContaining('CampusOS'), findsWidgets);
     expect(find.textContaining('Home'), findsOneWidget);
     expect(find.textContaining('My Schedule'), findsOneWidget);
+    expect(find.textContaining('Assignments'), findsOneWidget);
     expect(find.textContaining('Class Notes'), findsOneWidget);
   });
 }
