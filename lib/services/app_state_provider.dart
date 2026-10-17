@@ -1,3 +1,4 @@
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/study_session.dart';
@@ -42,7 +43,7 @@ class AppStateProvider extends ChangeNotifier {
   // Session History
   List<StudySession> _sessionHistory = [];
 
-  // Flag for triggering UI notification dialog
+  // Completion dialog flag
   bool _justCompleted = false;
 
   // Motivational Quotes
@@ -93,7 +94,8 @@ class AppStateProvider extends ChangeNotifier {
   String get activeAmbientSound => _activeAmbientSound;
 
   int get waterGlassesToday => _waterGlassesToday;
-  List<StudySession> get sessionHistory => List.unmodifiable(_sessionHistory);
+  List<StudySession> get sessionHistory =>
+      List.unmodifiable(_sessionHistory);
   bool get justCompleted => _justCompleted;
   String get currentQuote => _quotes[_quoteIndex % _quotes.length];
 
@@ -112,43 +114,57 @@ class AppStateProvider extends ChangeNotifier {
     }
   }
 
-  /// Progress fraction from 0.0 to 1.0 for circular indicators
+  // Timer progress from 0.0 to 1.0
   double get progressFraction {
-    if (_totalSeconds == 0) return 0.0;
-    return (1.0 - (_secondsRemaining / _totalSeconds)).clamp(0.0, 1.0);
+    if (_totalSeconds <= 0) return 0.0;
+
+    return (1.0 - (_secondsRemaining / _totalSeconds))
+        .clamp(0.0, 1.0)
+        .toDouble();
   }
 
-  /// Initialize application state from local storage and setup notifications
+  // Initialize application state
   Future<void> init() async {
     await _notificationService.initialize();
 
     final settings = await _storageService.loadSettings();
+
     _studyDurationMins = settings['studyMins'] ?? 25;
     _shortBreakDurationMins = settings['shortBreakMins'] ?? 5;
     _longBreakDurationMins = settings['longBreakMins'] ?? 15;
     _userName = settings['userName'] ?? 'Scholar';
+<<<<<<< HEAD
+    _notificationsEnabled =
+        settings['notificationsEnabled'] ?? true;
+    _hydrationRemindersEnabled =
+        settings['hydrationRemindersEnabled'] ?? true;
+=======
     _notificationsEnabled = settings['notificationsEnabled'] ?? true;
     _hydrationRemindersEnabled = settings['hydrationRemindersEnabled'] ?? true;
     _dailyGoalSessions = settings['dailyGoalSessions'] ?? 4;
     _themePreset = settings['themePreset'] ?? 'blue';
     _selectedSubject = settings['selectedSubject'] ?? 'General Focus 🧠';
+>>>>>>> 9767c7eb43a25ab2a83e45be8b6861fc20b0b00c
 
     _sessionHistory = await _storageService.loadSessions();
-    _waterGlassesToday = await _storageService.loadWaterGlassesToday();
+    _waterGlassesToday =
+    await _storageService.loadWaterGlassesToday();
 
     _resetTimerValueForCurrentMode();
-
     notifyListeners();
   }
 
-  /// Format remaining seconds to MM:SS
+  // Format remaining time as MM:SS
   String get formattedTime {
-    final minutes = (_secondsRemaining ~/ 60).toString().padLeft(2, '0');
-    final seconds = (_secondsRemaining % 60).toString().padLeft(2, '0');
+    final minutes =
+    (_secondsRemaining ~/ 60).toString().padLeft(2, '0');
+    final seconds =
+    (_secondsRemaining % 60).toString().padLeft(2, '0');
+
     return '$minutes:$seconds';
   }
 
-  /// Label for current mode
+  // Current session label
   String get modeLabel {
     switch (_currentMode) {
       case SessionMode.study:
@@ -160,6 +176,9 @@ class AppStateProvider extends ChangeNotifier {
     }
   }
 
+<<<<<<< HEAD
+  // Start timer
+=======
   /// Rotate to next motivational quote
   void nextQuote() {
     _quoteIndex = (_quoteIndex + 1) % _quotes.length;
@@ -187,6 +206,7 @@ class AppStateProvider extends ChangeNotifier {
   }
 
   /// Start timer counting down
+>>>>>>> 9767c7eb43a25ab2a83e45be8b6861fc20b0b00c
   void startTimer() {
     if (_timerStatus == TimerStatus.running) return;
 
@@ -202,19 +222,24 @@ class AppStateProvider extends ChangeNotifier {
       _notificationService.requestPermissions();
     }
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_secondsRemaining > 0) {
-        _secondsRemaining--;
-        notifyListeners();
-      } else {
-        _handleTimerCompletion();
-      }
-    });
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+          (timer) {
+        if (_secondsRemaining > 1) {
+          _secondsRemaining--;
+          notifyListeners();
+        } else {
+          _secondsRemaining = 0;
+          _cancelTimer();
+          _handleTimerCompletion();
+        }
+      },
+    );
 
     notifyListeners();
   }
 
-  /// Pause current running timer
+  // Pause timer
   void pauseTimer() {
     if (_timerStatus == TimerStatus.running) {
       _cancelTimer();
@@ -223,14 +248,14 @@ class AppStateProvider extends ChangeNotifier {
     }
   }
 
-  /// Resume paused timer
+  // Resume paused timer
   void resumeTimer() {
     if (_timerStatus == TimerStatus.paused) {
       startTimer();
     }
   }
 
-  /// Reset timer to full duration for current mode
+  // Reset timer
   void resetTimer() {
     _cancelTimer();
     _timerStatus = TimerStatus.idle;
@@ -239,9 +264,12 @@ class AppStateProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Switch session mode (Study / Short Break / Long Break)
+  // Switch between study and break modes
   void setSessionMode(SessionMode mode) {
-    if (_currentMode == mode && _timerStatus == TimerStatus.idle) return;
+    if (_currentMode == mode &&
+        _timerStatus == TimerStatus.idle) {
+      return;
+    }
 
     _cancelTimer();
     _currentMode = mode;
@@ -251,40 +279,58 @@ class AppStateProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Handle timer completion
+  // Handle timer completion
   Future<void> _handleTimerCompletion() async {
+    if (_timerStatus != TimerStatus.running) return;
+
     _cancelTimer();
     _timerStatus = TimerStatus.completed;
     _justCompleted = true;
 
-    String notifTitle = '';
-    String notifBody = '';
+    String notifTitle;
+    String notifBody;
+
+    final now = DateTime.now();
 
     if (_currentMode == SessionMode.study) {
       notifTitle = 'Focus Session Complete! 🎉';
+<<<<<<< HEAD
+      notifBody =
+      'Awesome job! Time to take a well-deserved break and drink some water 💧';
+=======
       notifBody = 'Awesome job! You completed a study session in $_selectedSubject. Time to rest and drink water 💧';
+>>>>>>> 9767c7eb43a25ab2a83e45be8b6861fc20b0b00c
 
       final session = StudySession(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        id: now.millisecondsSinceEpoch.toString(),
         sessionType: 'study',
         durationMinutes: _studyDurationMins,
+<<<<<<< HEAD
+        timestamp: now,
+        subject: 'Focus Session',
+=======
         timestamp: DateTime.now(),
         subject: _selectedSubject,
+>>>>>>> 9767c7eb43a25ab2a83e45be8b6861fc20b0b00c
       );
 
       _sessionHistory.add(session);
       await _storageService.saveSession(session);
     } else {
       notifTitle = 'Break Completed! 🚀';
-      notifBody = 'Feeling refreshed? Ready to get back into focus mode!';
+      notifBody =
+      'Feeling refreshed? Ready to get back into focus mode!';
 
       final session = StudySession(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        sessionType: _currentMode == SessionMode.shortBreak ? 'short_break' : 'long_break',
-        durationMinutes: _currentMode == SessionMode.shortBreak
+        id: now.millisecondsSinceEpoch.toString(),
+        sessionType: _currentMode == SessionMode.shortBreak
+            ? 'short_break'
+            : 'long_break',
+        durationMinutes:
+        _currentMode == SessionMode.shortBreak
             ? _shortBreakDurationMins
             : _longBreakDurationMins,
-        timestamp: DateTime.now(),
+        timestamp: now,
         subject: 'Break Time',
       );
 
@@ -302,32 +348,42 @@ class AppStateProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Dismiss the completion alert dialog flag
+  // Dismiss completion dialog
   void dismissCompletionDialog() {
     _justCompleted = false;
     notifyListeners();
   }
 
-  /// Increment water glasses consumed today
+  // Add one glass of water
   Future<void> addWaterGlass() async {
     _waterGlassesToday++;
-    await _storageService.saveWaterGlassesToday(_waterGlassesToday);
+    await _storageService.saveWaterGlassesToday(
+      _waterGlassesToday,
+    );
     notifyListeners();
   }
 
-  /// Reset today's water counter
+  // Reset water counter
   Future<void> resetWaterGlasses() async {
     _waterGlassesToday = 0;
     await _storageService.saveWaterGlassesToday(0);
     notifyListeners();
   }
 
-  /// Update timer duration configurations
+  // Update timer durations
   Future<void> updateTimerDurations({
     required int studyMins,
     required int shortBreakMins,
     required int longBreakMins,
   }) async {
+    if (studyMins <= 0 ||
+        shortBreakMins <= 0 ||
+        longBreakMins <= 0) {
+      throw ArgumentError(
+        'All timer durations must be greater than zero.',
+      );
+    }
+
     _studyDurationMins = studyMins;
     _shortBreakDurationMins = shortBreakMins;
     _longBreakDurationMins = longBreakMins;
@@ -338,14 +394,19 @@ class AppStateProvider extends ChangeNotifier {
       longBreakMins: longBreakMins,
     );
 
+<<<<<<< HEAD
+    if (_timerStatus == TimerStatus.idle ||
+        _timerStatus == TimerStatus.completed) {
+=======
     if (_timerStatus == TimerStatus.idle || _timerStatus == TimerStatus.completed) {
+>>>>>>> 9767c7eb43a25ab2a83e45be8b6861fc20b0b00c
       _resetTimerValueForCurrentMode();
     }
 
     notifyListeners();
   }
 
-  /// Update user profile & notification settings
+  // Update user settings
   Future<void> updateUserSettings({
     required String userName,
     required bool notificationsEnabled,
@@ -371,22 +432,30 @@ class AppStateProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Clear entire session history
+  // Clear session history
   Future<void> clearSessionHistory() async {
     _sessionHistory.clear();
     await _storageService.clearHistory();
     notifyListeners();
   }
 
-  /// Reset all app data
+  // Reset all app data
   Future<void> resetAllAppData() async {
     _cancelTimer();
+    _timerStatus = TimerStatus.idle;
+    _justCompleted = false;
+
     await _storageService.resetAllData();
     await init();
   }
 
+<<<<<<< HEAD
+  // Set timer value according to selected mode
+=======
+>>>>>>> 9767c7eb43a25ab2a83e45be8b6861fc20b0b00c
   void _resetTimerValueForCurrentMode() {
-    int durationMins = _studyDurationMins;
+    int durationMins;
+
     switch (_currentMode) {
       case SessionMode.study:
         durationMins = _studyDurationMins;
@@ -398,41 +467,55 @@ class AppStateProvider extends ChangeNotifier {
         durationMins = _longBreakDurationMins;
         break;
     }
+
     _totalSeconds = durationMins * 60;
     _secondsRemaining = _totalSeconds;
   }
 
+<<<<<<< HEAD
+  // Cancel active timer
+=======
+>>>>>>> 9767c7eb43a25ab2a83e45be8b6861fc20b0b00c
   void _cancelTimer() {
     _timer?.cancel();
     _timer = null;
   }
 
+<<<<<<< HEAD
+  // Today's study time in minutes
+=======
   // --- Statistics & Goal Helpers ---
 
   /// Today's study time in minutes
+>>>>>>> 9767c7eb43a25ab2a83e45be8b6861fc20b0b00c
   int get todayStudyMinutes {
     final now = DateTime.now();
+
     return _sessionHistory
         .where((s) =>
-            s.sessionType == 'study' &&
-            s.timestamp.year == now.year &&
-            s.timestamp.month == now.month &&
-            s.timestamp.day == now.day)
+    s.sessionType == 'study' &&
+        s.timestamp.year == now.year &&
+        s.timestamp.month == now.month &&
+        s.timestamp.day == now.day)
         .fold(0, (sum, s) => sum + s.durationMinutes);
   }
 
-  /// Today's completed study sessions count
+  // Today's completed study sessions
   int get todayCompletedSessionsCount {
     final now = DateTime.now();
+
     return _sessionHistory
         .where((s) =>
-            s.sessionType == 'study' &&
-            s.timestamp.year == now.year &&
-            s.timestamp.month == now.month &&
-            s.timestamp.day == now.day)
+    s.sessionType == 'study' &&
+        s.timestamp.year == now.year &&
+        s.timestamp.month == now.month &&
+        s.timestamp.day == now.day)
         .length;
   }
 
+<<<<<<< HEAD
+  // Study time during the last seven days
+=======
   /// Progress fraction towards daily goal (0.0 to 1.0)
   double get dailyGoalProgress {
     if (_dailyGoalSessions == 0) return 0.0;
@@ -473,26 +556,31 @@ class AppStateProvider extends ChangeNotifier {
   }
 
   /// Weekly study time in minutes (last 7 days)
+>>>>>>> 9767c7eb43a25ab2a83e45be8b6861fc20b0b00c
   int get weeklyStudyMinutes {
-    final now = DateTime.now();
-    final sevenDaysAgo = now.subtract(const Duration(days: 7));
+    final sevenDaysAgo =
+    DateTime.now().subtract(const Duration(days: 7));
+
     return _sessionHistory
         .where((s) =>
-            s.sessionType == 'study' && s.timestamp.isAfter(sevenDaysAgo))
+    s.sessionType == 'study' &&
+        s.timestamp.isAfter(sevenDaysAgo))
         .fold(0, (sum, s) => sum + s.durationMinutes);
   }
 
-  /// Weekly completed study sessions count
+  // Completed study sessions during the last seven days
   int get weeklyCompletedSessionsCount {
-    final now = DateTime.now();
-    final sevenDaysAgo = now.subtract(const Duration(days: 7));
+    final sevenDaysAgo =
+    DateTime.now().subtract(const Duration(days: 7));
+
     return _sessionHistory
         .where((s) =>
-            s.sessionType == 'study' && s.timestamp.isAfter(sevenDaysAgo))
+    s.sessionType == 'study' &&
+        s.timestamp.isAfter(sevenDaysAgo))
         .length;
   }
 
-  /// Total study time in minutes (all-time)
+  // Total study time
   int get totalStudyMinutesAllTime {
     return _sessionHistory
         .where((s) => s.sessionType == 'study')
