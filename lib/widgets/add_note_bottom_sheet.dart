@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../models/subject_model.dart';
 import '../models/class_note_model.dart';
 import '../theme/app_theme.dart';
@@ -45,6 +46,7 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
   SubjectModel? _selectedCourse;
   late TextEditingController _titleController;
   late TextEditingController _contentController;
+  late DateTime _selectedNoteDate;
   bool _isLoading = true;
 
   @override
@@ -54,6 +56,7 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
         TextEditingController(text: widget.initialNote?.title ?? '');
     _contentController =
         TextEditingController(text: widget.initialNote?.content ?? '');
+    _selectedNoteDate = widget.initialNote?.createdAt ?? DateTime.now();
     _loadUserCourses();
   }
 
@@ -89,6 +92,18 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
     }
   }
 
+  Future<void> _pickNoteDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedNoteDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) {
+      setState(() => _selectedNoteDate = picked);
+    }
+  }
+
   Future<void> _saveNote() async {
     if (_formKey.currentState!.validate() && _selectedCourse != null) {
       final note = ClassNoteModel(
@@ -96,7 +111,7 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
         subjectId: _selectedCourse!.id!,
         title: _titleController.text.trim(),
         content: _contentController.text.trim(),
-        createdAt: widget.initialNote?.createdAt ?? DateTime.now(),
+        createdAt: _selectedNoteDate,
       );
 
       if (widget.initialNote == null) {
@@ -165,6 +180,9 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
         ),
       );
     }
+
+    final formattedDateDayStr =
+        DateFormat('EEEE, MMM d, y').format(_selectedNoteDate);
 
     return Container(
       decoration: BoxDecoration(
@@ -249,6 +267,21 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
               ),
               const SizedBox(height: 14),
 
+              // Date & Day Picker Button
+              OutlinedButton.icon(
+                onPressed: _pickNoteDate,
+                icon: const Icon(Icons.calendar_today_rounded, size: 18),
+                label: Text('Date & Day: $formattedDateDayStr'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+
               TextFormField(
                 controller: _titleController,
                 decoration: InputDecoration(
@@ -280,7 +313,7 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
                   isDense: true,
                 ),
                 validator: (val) => val == null || val.trim().isEmpty
-                    ? 'Please enter note content or links'
+                    ? 'Please enter note details or links'
                     : null,
               ),
               const SizedBox(height: 24),

@@ -6,12 +6,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/subject_model.dart';
 import '../models/schedule_block_model.dart';
 import '../models/assignment_model.dart';
+import '../models/exam_model.dart';
+import '../models/quiz_model.dart';
 import '../database/database_helper.dart';
 import '../theme/app_theme.dart';
 import '../widgets/subject_card.dart';
 import '../widgets/timeline_schedule_card.dart';
+import '../widgets/swipe_assignment_card.dart';
 import '../widgets/add_course_bottom_sheet.dart';
 import '../widgets/course_details_bottom_sheet.dart';
+import '../widgets/add_exam_bottom_sheet.dart';
+import '../widgets/add_quiz_bottom_sheet.dart';
 import '../widgets/edit_profile_dialog.dart';
 import '../widgets/study_tasker_logo.dart';
 
@@ -28,8 +33,11 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   List<SubjectModel> _courses = [];
   List<ScheduleBlockModel> _todaySchedule = [];
   List<AssignmentModel> _todayAssignments = [];
+  List<ExamModel> _upcomingExams = [];
+  List<QuizModel> _upcomingQuizzes = [];
   bool _isLoading = true;
   Timer? _midnightTimer;
+  Timer? _periodicRefreshTimer;
 
   @override
   void initState() {
@@ -37,16 +45,20 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _loadDashboardData();
     _scheduleMidnightUpdate();
+
+    _periodicRefreshTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) _loadDashboardData();
+    });
   }
 
   @override
   void dispose() {
     _midnightTimer?.cancel();
+    _periodicRefreshTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
-  /// Automatically re-evaluate DateTime.now() whenever app resumes from background
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
@@ -55,7 +67,6 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     }
   }
 
-  /// Schedules a timer to trigger the exact second midnight hits
   void _scheduleMidnightUpdate() {
     _midnightTimer?.cancel();
     final now = DateTime.now();
@@ -65,27 +76,28 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     _midnightTimer = Timer(timeUntilMidnight, () {
       if (mounted) {
         _loadDashboardData();
-        _scheduleMidnightUpdate(); // Reschedule for following midnight
+        _scheduleMidnightUpdate();
       }
     });
   }
 
   Future<void> _loadDashboardData() async {
-    setState(() => _isLoading = true);
-
     final prefs = await SharedPreferences.getInstance();
     final savedName = prefs.getString('student_name') ?? 'Alex Rivers';
 
     final courses = await DatabaseHelper.instance.getSubjects();
     final todayWeekday = DateTime.now().weekday; // 1 = Mon, 7 = Sun
-    final todaySchedule =
+    final rawTodaySchedule =
         await DatabaseHelper.instance.getScheduleBlocksForDay(todayWeekday);
+
+    // Filter out past classes for today
+    final upcomingTodaySchedule =
+        rawTodaySchedule.where((block) => !block.isPassedToday).toList();
 
     final allAssignments = await DatabaseHelper.instance.getAssignments(
       pendingOnly: true,
     );
 
-    // Filter today's or overdue assignments
     final now = DateTime.now();
     final todayAssignments = allAssignments.where((a) {
       final isSameDay = a.dueDate.year == now.year &&
@@ -95,12 +107,17 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       return isSameDay || isOverdue;
     }).toList();
 
+    final exams = await DatabaseHelper.instance.getExams();
+    final quizzes = await DatabaseHelper.instance.getQuizzes();
+
     if (mounted) {
       setState(() {
         _studentName = savedName;
         _courses = courses;
-        _todaySchedule = todaySchedule;
+        _todaySchedule = upcomingTodaySchedule;
         _todayAssignments = todayAssignments;
+        _upcomingExams = exams;
+        _upcomingQuizzes = quizzes;
         _isLoading = false;
       });
     }
@@ -121,6 +138,14 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       onEdit: () => _openAddCourseModal(course: course),
       onDelete: () => _confirmDeleteCourse(course.id!),
     );
+  }
+
+  void _openAddExamModal() {
+    AddExamBottomSheet.show(context, onSaved: _loadDashboardData);
+  }
+
+  void _openAddQuizModal() {
+    AddQuizBottomSheet.show(context, onSaved: _loadDashboardData);
   }
 
   void _openEditProfileDialog() {
@@ -352,7 +377,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
                     const SizedBox(height: 24),
 
-                    // 3. "My Courses" Section Header & + Add Course Button
+                    // 3. "My Courses" Grid Section
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -389,13 +414,12 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                     ),
                     const SizedBox(height: 14),
 
-                    // Grid View displaying courses
                     if (_courses.isEmpty)
                       _buildEmptyStateCard(
                         icon: Icons.menu_book_rounded,
                         title: 'No Courses Added Yet',
                         message:
-                            'Tap the "+ Add Course" button above to create your courses with custom color themes!',
+                            'Tap "+ Add Course" above to add your courses with custom color themes!',
                         actionLabel: '+ Add Course',
                         onAction: () => _openAddCourseModal(),
                       )
@@ -424,7 +448,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
                     const SizedBox(height: 28),
 
-                    // 4. Today's Schedule Stream (Dynamic Real-Time List)
+                    // 4. Today's Schedule Stream (NO delete option menu!)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -452,9 +476,9 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                     if (_todaySchedule.isEmpty)
                       _buildEmptyStateCard(
                         icon: Icons.event_available_rounded,
-                        title: 'No Classes Scheduled Today',
+                        title: 'No Upcoming Classes Today',
                         message:
-                            'No classes scheduled today. Time to relax or head over to the "My Schedule" tab to set up timetable blocks.',
+                            'All your classes for today have ended or none are scheduled. Enjoy the rest of your day!',
                       )
                     else
                       ListView.builder(
@@ -467,6 +491,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                             padding: const EdgeInsets.only(bottom: 10.0),
                             child: TimelineScheduleCard(
                               block: block,
+                              showMenu: false, // NO delete option on Home!
                               onEdit: () {},
                               onDelete: () {},
                             ),
@@ -474,14 +499,15 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                         },
                       ),
 
-                    // 5. Today's Due Assignments Quick Checklist
+                    const SizedBox(height: 28),
+
+                    // 5. Today's Assignments Table with Swipe-to-Finish!
                     if (_todayAssignments.isNotEmpty) ...[
-                      const SizedBox(height: 28),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            'Due Tasks Today',
+                            'Due Assignments Today',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -504,26 +530,137 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                         itemCount: _todayAssignments.length,
                         itemBuilder: (context, index) {
                           final assignment = _todayAssignments[index];
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            child: CheckboxListTile(
-                              value: assignment.isCompleted,
-                              activeColor: AppTheme.brandIndigo,
-                              title: Text(
-                                assignment.title,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 14),
-                              ),
-                              subtitle: Text(
-                                '${assignment.courseName ?? 'Course'} • Due: ${DateFormat('h:mm a').format(assignment.dueDate)}',
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                              onChanged: (_) =>
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: SwipeAssignmentCard(
+                              assignment: assignment,
+                              onFinished: () =>
                                   _toggleAssignmentCompletion(assignment),
                             ),
                           );
                         },
                       ),
+                      const SizedBox(height: 28),
+                    ],
+
+                    // 6. Exams & Quizzes Tracker Section
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Exams & Quizzes',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed: _openAddQuizModal,
+                              icon: const Icon(Icons.quiz_outlined, size: 16),
+                              label: const Text('Quiz',
+                                  style: TextStyle(fontSize: 12)),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 6),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton.icon(
+                              onPressed: _openAddExamModal,
+                              icon: const Icon(Icons.assignment_turned_in,
+                                  size: 16, color: Colors.white),
+                              label: const Text('Exam',
+                                  style: TextStyle(
+                                      fontSize: 12, color: Colors.white)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.brandRose,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 6),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    if (_upcomingExams.isEmpty && _upcomingQuizzes.isEmpty)
+                      _buildEmptyStateCard(
+                        icon: Icons.assignment_outlined,
+                        title: 'No Upcoming Exams or Quizzes',
+                        message:
+                            'Tap the "+ Exam" or "+ Quiz" buttons above to track test dates and room venues!',
+                      )
+                    else ...[
+                      // Upcoming Exams
+                      ..._upcomingExams.map((exam) {
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: AppTheme.brandRose,
+                              child: const Icon(Icons.assignment_turned_in,
+                                  color: Colors.white, size: 20),
+                            ),
+                            title: Text(
+                              '${exam.courseName ?? 'Course'}: ${exam.title}',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                            subtitle: Text(
+                              'Date: ${DateFormat('EEE, MMM d • h:mm a').format(exam.examDate)}${exam.room.isNotEmpty ? ' • Room: ${exam.room}' : ''}',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete_outline_rounded,
+                                  color: Colors.grey, size: 20),
+                              onPressed: () async {
+                                await DatabaseHelper.instance.deleteExam(exam.id!);
+                                _loadDashboardData();
+                              },
+                            ),
+                          ),
+                        );
+                      }),
+
+                      // Upcoming Quizzes
+                      ..._upcomingQuizzes.map((quiz) {
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: AppTheme.brandCyan,
+                              child: const Icon(Icons.quiz_outlined,
+                                  color: Colors.white, size: 20),
+                            ),
+                            title: Text(
+                              '${quiz.courseName ?? 'Course'}: ${quiz.topic}',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                            subtitle: Text(
+                              'Date: ${DateFormat('EEE, MMM d • h:mm a').format(quiz.quizDate)}${quiz.venue.isNotEmpty ? ' • Venue: ${quiz.venue}' : ''}',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete_outline_rounded,
+                                  color: Colors.grey, size: 20),
+                              onPressed: () async {
+                                await DatabaseHelper.instance.deleteQuiz(quiz.id!);
+                                _loadDashboardData();
+                              },
+                            ),
+                          ),
+                        );
+                      }),
                     ],
 
                     const SizedBox(height: 24),
@@ -596,18 +733,18 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   }
 
   String todayScheduleText(int count) {
-    if (count == 0) return 'No classes today';
-    if (count == 1) return '1 class today';
-    return '$count classes today';
+    if (count == 0) return 'No upcoming classes';
+    if (count == 1) return '1 upcoming class';
+    return '$count upcoming classes';
   }
 
-  String _buildTodaySummaryText(int classesCount, int tasksCount) {
-    if (classesCount == 0 && tasksCount == 0) {
-      return 'No classes & no pending tasks today. All clear! 🎉';
+  String _buildTodaySummaryText(int upcomingClassesCount, int tasksCount) {
+    if (upcomingClassesCount == 0 && tasksCount == 0) {
+      return 'No upcoming classes & no pending tasks today. All clear! 🎉';
     }
-    final classStr = classesCount == 0
-        ? 'No classes'
-        : (classesCount == 1 ? '1 class' : '$classesCount classes');
+    final classStr = upcomingClassesCount == 0
+        ? 'No upcoming classes'
+        : (upcomingClassesCount == 1 ? '1 upcoming class' : '$upcomingClassesCount upcoming classes');
     final taskStr = tasksCount == 0
         ? 'no pending tasks'
         : (tasksCount == 1 ? '1 pending task' : '$tasksCount pending tasks');

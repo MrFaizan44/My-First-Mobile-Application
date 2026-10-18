@@ -6,7 +6,7 @@ import '../theme/app_theme.dart';
 import '../widgets/timeline_schedule_card.dart';
 import '../widgets/add_class_slot_bottom_sheet.dart';
 
-/// My Schedule & Timetable Tab for StudyTasker
+/// My Schedule & Timetable Tab for StudyTasker with Improved 7-Day Segmented HCI
 class ScheduleView extends StatefulWidget {
   const ScheduleView({super.key});
 
@@ -21,13 +21,13 @@ class _ScheduleViewState extends State<ScheduleView> with WidgetsBindingObserver
   Timer? _midnightTimer;
 
   final List<Map<String, dynamic>> _weekDays = const [
-    {'label': 'Mon', 'day': 1},
-    {'label': 'Tue', 'day': 2},
-    {'label': 'Wed', 'day': 3},
-    {'label': 'Thu', 'day': 4},
-    {'label': 'Fri', 'day': 5},
-    {'label': 'Sat', 'day': 6},
-    {'label': 'Sun', 'day': 7},
+    {'short': 'M', 'label': 'Mon', 'day': 1},
+    {'short': 'T', 'label': 'Tue', 'day': 2},
+    {'short': 'W', 'label': 'Wed', 'day': 3},
+    {'short': 'T', 'label': 'Thu', 'day': 4},
+    {'short': 'F', 'label': 'Fri', 'day': 5},
+    {'short': 'S', 'label': 'Sat', 'day': 6},
+    {'short': 'S', 'label': 'Sun', 'day': 7},
   ];
 
   @override
@@ -45,7 +45,6 @@ class _ScheduleViewState extends State<ScheduleView> with WidgetsBindingObserver
     super.dispose();
   }
 
-  /// Automatically update selected day to current weekday whenever app resumes
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
@@ -57,7 +56,6 @@ class _ScheduleViewState extends State<ScheduleView> with WidgetsBindingObserver
     }
   }
 
-  /// Schedules a timer to trigger the exact second midnight hits
   void _scheduleMidnightUpdate() {
     _midnightTimer?.cancel();
     final now = DateTime.now();
@@ -70,7 +68,7 @@ class _ScheduleViewState extends State<ScheduleView> with WidgetsBindingObserver
           _selectedDay = DateTime.now().weekday;
         });
         _loadScheduleForDay();
-        _scheduleMidnightUpdate(); // Reschedule for following midnight
+        _scheduleMidnightUpdate();
       }
     });
   }
@@ -131,6 +129,7 @@ class _ScheduleViewState extends State<ScheduleView> with WidgetsBindingObserver
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final todayWeekday = DateTime.now().weekday;
 
     return Scaffold(
       appBar: AppBar(
@@ -140,46 +139,74 @@ class _ScheduleViewState extends State<ScheduleView> with WidgetsBindingObserver
         children: [
           const SizedBox(height: 12),
 
-          // 1. Horizontal Day Picker Bar (Monday to Sunday)
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+          // 1. High-HCI 7-Day All-Visible Segmented Grid Bar
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isDark ? AppTheme.darkSurface : Colors.grey[200],
+              borderRadius: BorderRadius.circular(20),
+            ),
             child: Row(
               children: _weekDays.map((item) {
                 final int dayVal = item['day'] as int;
                 final String label = item['label'] as String;
                 final bool isSelected = _selectedDay == dayVal;
+                final bool isToday = todayWeekday == dayVal;
 
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: ChoiceChip(
-                    label: Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected
-                            ? Colors.white
-                            : (isDark
-                                ? AppTheme.darkTextPrimary
-                                : AppTheme.lightTextPrimary),
-                      ),
-                    ),
-                    selected: isSelected,
-                    selectedColor: AppTheme.primaryColor,
-                    backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    onSelected: (selected) {
-                      if (selected) {
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      if (_selectedDay != dayVal) {
                         setState(() {
                           _selectedDay = dayVal;
                         });
                         _loadScheduleForDay();
                       }
                     },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppTheme.brandIndigo
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            label,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.w600,
+                              color: isSelected
+                                  ? Colors.white
+                                  : (isDark
+                                      ? AppTheme.darkTextPrimary
+                                      : AppTheme.lightTextPrimary),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          if (isToday)
+                            Container(
+                              width: 5,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: isSelected
+                                    ? Colors.white
+                                    : AppTheme.brandIndigo,
+                              ),
+                            )
+                          else
+                            const SizedBox(height: 5),
+                        ],
+                      ),
+                    ),
                   ),
                 );
               }).toList(),

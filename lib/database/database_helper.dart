@@ -4,6 +4,8 @@ import '../models/subject_model.dart';
 import '../models/schedule_block_model.dart';
 import '../models/class_note_model.dart';
 import '../models/assignment_model.dart';
+import '../models/exam_model.dart';
+import '../models/quiz_model.dart';
 
 /// Local SQLite Database Helper for StudyTasker offline persistence
 class DatabaseHelper {
@@ -21,7 +23,7 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     final String dbPath = await getDatabasesPath();
-    final String path = join(dbPath, 'studytasker_v4.db');
+    final String path = join(dbPath, 'studytasker_v5.db');
 
     return await openDatabase(
       path,
@@ -33,7 +35,7 @@ class DatabaseHelper {
   Future<void> _createDb(Database db, int version) async {
     await db.execute('PRAGMA foreign_keys = ON;');
 
-    // Table 1: Courses (Name, Instructor, Color Theme)
+    // Table 1: Courses
     await db.execute('''
       CREATE TABLE subjects (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,7 +45,7 @@ class DatabaseHelper {
       );
     ''');
 
-    // Table 2: Schedule Blocks (Course, Day, Start/End Time, Slot-Specific Room/Link)
+    // Table 2: Schedule Blocks
     await db.execute('''
       CREATE TABLE schedule_blocks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,6 +80,30 @@ class DatabaseHelper {
         content TEXT NOT NULL,
         createdAt TEXT NOT NULL,
         FOREIGN KEY (subjectId) REFERENCES subjects (id) ON DELETE CASCADE
+      );
+    ''');
+
+    // Table 5: Exams
+    await db.execute('''
+      CREATE TABLE exams (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        courseId INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        examDate TEXT NOT NULL,
+        room TEXT,
+        FOREIGN KEY (courseId) REFERENCES subjects (id) ON DELETE CASCADE
+      );
+    ''');
+
+    // Table 6: Quizzes
+    await db.execute('''
+      CREATE TABLE quizzes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        courseId INTEGER NOT NULL,
+        topic TEXT NOT NULL,
+        quizDate TEXT NOT NULL,
+        venue TEXT,
+        FOREIGN KEY (courseId) REFERENCES subjects (id) ON DELETE CASCADE
       );
     ''');
   }
@@ -309,6 +335,96 @@ class DatabaseHelper {
     final db = await database;
     return await db.delete(
       'class_notes',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // ==========================================
+  // EXAM CRUD OPERATIONS
+  // ==========================================
+
+  Future<int> insertExam(ExamModel exam) async {
+    final db = await database;
+    return await db.insert('exams', exam.toMap());
+  }
+
+  Future<List<ExamModel>> getExams({int? courseId}) async {
+    final db = await database;
+    String query = '''
+      SELECT 
+        e.id,
+        e.courseId,
+        e.title,
+        e.examDate,
+        e.room,
+        sub.name AS courseName,
+        sub.colorValue AS courseColorValue
+      FROM exams e
+      INNER JOIN subjects sub ON e.courseId = sub.id
+    ''';
+
+    List<dynamic> whereArgs = [];
+    if (courseId != null) {
+      query += ' WHERE e.courseId = ?';
+      whereArgs.add(courseId);
+    }
+
+    query += ' ORDER BY e.examDate ASC;';
+
+    final List<Map<String, dynamic>> maps = await db.rawQuery(query, whereArgs);
+    return maps.map((map) => ExamModel.fromMap(map)).toList();
+  }
+
+  Future<int> deleteExam(int id) async {
+    final db = await database;
+    return await db.delete(
+      'exams',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // ==========================================
+  // QUIZ CRUD OPERATIONS
+  // ==========================================
+
+  Future<int> insertQuiz(QuizModel quiz) async {
+    final db = await database;
+    return await db.insert('quizzes', quiz.toMap());
+  }
+
+  Future<List<QuizModel>> getQuizzes({int? courseId}) async {
+    final db = await database;
+    String query = '''
+      SELECT 
+        q.id,
+        q.courseId,
+        q.topic,
+        q.quizDate,
+        q.venue,
+        sub.name AS courseName,
+        sub.colorValue AS courseColorValue
+      FROM quizzes q
+      INNER JOIN subjects sub ON q.courseId = sub.id
+    ''';
+
+    List<dynamic> whereArgs = [];
+    if (courseId != null) {
+      query += ' WHERE q.courseId = ?';
+      whereArgs.add(courseId);
+    }
+
+    query += ' ORDER BY q.quizDate ASC;';
+
+    final List<Map<String, dynamic>> maps = await db.rawQuery(query, whereArgs);
+    return maps.map((map) => QuizModel.fromMap(map)).toList();
+  }
+
+  Future<int> deleteQuiz(int id) async {
+    final db = await database;
+    return await db.delete(
+      'quizzes',
       where: 'id = ?',
       whereArgs: [id],
     );

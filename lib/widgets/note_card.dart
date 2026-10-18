@@ -5,7 +5,7 @@ import '../models/class_note_model.dart';
 import '../theme/app_theme.dart';
 import 'custom_card.dart';
 
-/// Card widget displaying a user class note / resource with custom course color tag
+/// Card widget displaying a user class note / resource with date & day tag
 class NoteCard extends StatelessWidget {
   final ClassNoteModel note;
   final VoidCallback onEdit;
@@ -24,8 +24,8 @@ class NoteCard extends StatelessWidget {
         ? Color(note.subjectColorValue!)
         : AppTheme.brandIndigo;
 
-    final String formattedDate =
-        DateFormat('MMM d, y • h:mm a').format(note.createdAt);
+    final String formattedDateDay =
+        DateFormat('EEEE, MMM d, y').format(note.createdAt);
 
     final bool containsUrl = note.content.toLowerCase().contains('http://') ||
         note.content.toLowerCase().contains('https://') ||
@@ -144,9 +144,16 @@ class NoteCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                formattedDate,
-                style: const TextStyle(fontSize: 11, color: Colors.grey),
+              Row(
+                children: [
+                  const Icon(Icons.calendar_today_rounded,
+                      size: 12, color: Colors.grey),
+                  const SizedBox(width: 4),
+                  Text(
+                    formattedDateDay,
+                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
+                ],
               ),
               if (containsUrl)
                 Container(

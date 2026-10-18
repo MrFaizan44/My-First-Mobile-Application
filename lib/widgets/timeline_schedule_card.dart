@@ -8,12 +8,14 @@ class TimelineScheduleCard extends StatelessWidget {
   final ScheduleBlockModel block;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final bool showMenu; // Set to false on Home Page to disable delete option!
 
   const TimelineScheduleCard({
     super.key,
     required this.block,
     required this.onEdit,
     required this.onDelete,
+    this.showMenu = true,
   });
 
   @override
@@ -27,31 +29,31 @@ class TimelineScheduleCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Left Time Node Indicator
+          // Left Time Node Indicator with AM/PM formatting
           SizedBox(
-            width: 70,
+            width: 78,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  block.startTime,
+                  block.formattedStartTime,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  block.endTime,
+                  block.formattedEndTime,
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 10,
                     color: Colors.grey,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
 
           // Timeline Node Line & Dot
           Column(
@@ -107,41 +109,42 @@ class TimelineScheduleCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_horiz_rounded,
-                            color: Colors.grey, size: 20),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        onSelected: (val) {
-                          if (val == 'edit') onEdit();
-                          if (val == 'delete') onDelete();
-                        },
-                        itemBuilder: (context) => [
-                          const PopupMenuItem(
-                            value: 'edit',
-                            child: Row(
-                              children: [
-                                Icon(Icons.edit_outlined, size: 18),
-                                SizedBox(width: 8),
-                                Text('Edit Slot'),
-                              ],
+                      if (showMenu)
+                        PopupMenuButton<String>(
+                          icon: const Icon(Icons.more_horiz_rounded,
+                              color: Colors.grey, size: 20),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          onSelected: (val) {
+                            if (val == 'edit') onEdit();
+                            if (val == 'delete') onDelete();
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'edit',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.edit_outlined, size: 18),
+                                  SizedBox(width: 8),
+                                  Text('Edit Slot'),
+                                ],
+                              ),
                             ),
-                          ),
-                          const PopupMenuItem(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                Icon(Icons.delete_outline_rounded,
-                                    color: Colors.redAccent, size: 18),
-                                SizedBox(width: 8),
-                                Text('Delete Slot',
-                                    style:
-                                        TextStyle(color: Colors.redAccent)),
-                              ],
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete_outline_rounded,
+                                      color: Colors.redAccent, size: 18),
+                                  SizedBox(width: 8),
+                                  Text('Delete Slot',
+                                      style:
+                                          TextStyle(color: Colors.redAccent)),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
                     ],
                   ),
                   const SizedBox(height: 4),
