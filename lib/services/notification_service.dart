@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+import '../models/assignment_model.dart';
 
 /// Local Notification Service for StudyTasker reminders
 class NotificationService {
@@ -15,6 +18,8 @@ class NotificationService {
   /// Initialize Android local notification settings
   Future<void> initialize() async {
     if (_isInitialized) return;
+
+    tz.initializeTimeZones();
 
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -49,6 +54,57 @@ class NotificationService {
         print('Error requesting notification permissions: $e');
       }
       return false;
+    }
+  }
+
+  /// Schedule a local notification for an assignment due date
+  Future<void> scheduleAssignmentNotification(AssignmentModel assignment) async {
+    if (!_isInitialized) await initialize();
+    if (assignment.id == null || assignment.isCompleted) return;
+
+    if (assignment.dueDate.isBefore(DateTime.now())) return;
+
+    await requestPermissions();
+
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'study_tasker_assignment_channel',
+      'StudyTasker Reminders',
+      channelDescription: 'Notifications for upcoming assignment due dates',
+      importance: Importance.high,
+      priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
+    );
+
+    const NotificationDetails platformDetails =
+        NotificationDetails(android: androidDetails);
+
+    final scheduledDate = tz.TZDateTime.from(assignment.dueDate, tz.local);
+
+    try {
+      await _notificationsPlugin.zonedSchedule(
+        id: assignment.id!,
+        title: 'Assignment Due Soon: ${assignment.title}',
+        body: 'Course: ${assignment.courseName ?? 'Course'} • Due at ${assignment.dueDate.hour}:${assignment.dueDate.minute.toString().padLeft(2, '0')}',
+        scheduledDate: scheduledDate,
+        notificationDetails: platformDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error scheduling assignment notification: $e');
+      }
+    }
+  }
+
+  /// Cancel scheduled notification for an assignment
+  Future<void> cancelNotification(int id) async {
+    try {
+      await _notificationsPlugin.cancel(id: id);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error cancelling notification: $e');
+      }
     }
   }
 }

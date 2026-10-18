@@ -38,7 +38,6 @@ class _AddCourseBottomSheetState extends State<AddCourseBottomSheet> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _instructorController;
-  late TextEditingController _locationController;
   late Color _selectedColor;
 
   @override
@@ -48,8 +47,6 @@ class _AddCourseBottomSheetState extends State<AddCourseBottomSheet> {
         TextEditingController(text: widget.initialCourse?.name ?? '');
     _instructorController =
         TextEditingController(text: widget.initialCourse?.instructor ?? '');
-    _locationController =
-        TextEditingController(text: widget.initialCourse?.location ?? '');
     _selectedColor = widget.initialCourse != null
         ? widget.initialCourse!.color
         : AppTheme.subjectColors[0];
@@ -59,7 +56,6 @@ class _AddCourseBottomSheetState extends State<AddCourseBottomSheet> {
   void dispose() {
     _nameController.dispose();
     _instructorController.dispose();
-    _locationController.dispose();
     super.dispose();
   }
 
@@ -70,7 +66,6 @@ class _AddCourseBottomSheetState extends State<AddCourseBottomSheet> {
         name: _nameController.text.trim(),
         colorValue: _selectedColor.toARGB32(),
         instructor: _instructorController.text.trim(),
-        location: _locationController.text.trim(),
       );
 
       if (widget.initialCourse == null) {
@@ -164,21 +159,6 @@ class _AddCourseBottomSheetState extends State<AddCourseBottomSheet> {
                   labelText: 'Instructor Name',
                   hintText: 'e.g. Dr. Sarah Jenkins',
                   prefixIcon: const Icon(Icons.person_outline_rounded),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  isDense: true,
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // Room Number / Online Class Link
-              TextFormField(
-                controller: _locationController,
-                decoration: InputDecoration(
-                  labelText: 'Room Number / Online Link',
-                  hintText: 'e.g. Room 402B or https://meet.google.com/...',
-                  prefixIcon: const Icon(Icons.location_on_outlined),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),

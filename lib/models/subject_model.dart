@@ -6,14 +6,12 @@ class SubjectModel {
   final String name; // e.g. Mathematics, Computer Networks
   final int colorValue;
   final String instructor;
-  final String location; // Room Number or Online Class Link
 
   SubjectModel({
     this.id,
     required this.name,
     required this.colorValue,
     this.instructor = '',
-    this.location = '',
   });
 
   Color get color => Color(colorValue);
@@ -24,7 +22,6 @@ class SubjectModel {
       'name': name,
       'colorValue': colorValue,
       'instructor': instructor,
-      'location': location,
     };
   }
 
@@ -34,7 +31,6 @@ class SubjectModel {
       name: map['name'] as String,
       colorValue: map['colorValue'] as int,
       instructor: (map['instructor'] as String?) ?? '',
-      location: (map['location'] as String?) ?? '',
     );
   }
 }

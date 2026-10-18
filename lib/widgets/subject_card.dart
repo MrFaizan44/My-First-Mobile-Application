@@ -98,47 +98,23 @@ class SubjectCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (subject.instructor.isNotEmpty) ...[
-                        Row(
-                          children: [
-                            const Icon(Icons.person_outline_rounded,
-                                size: 13, color: Colors.grey),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                subject.instructor,
-                                style: const TextStyle(
-                                    fontSize: 11, color: Colors.grey),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
+                  if (subject.instructor.isNotEmpty)
+                    Row(
+                      children: [
+                        const Icon(Icons.person_outline_rounded,
+                            size: 13, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            subject.instructor,
+                            style: const TextStyle(
+                                fontSize: 11, color: Colors.grey),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        const SizedBox(height: 3),
                       ],
-                      if (subject.location.isNotEmpty)
-                        Row(
-                          children: [
-                            const Icon(Icons.location_on_outlined,
-                                size: 13, color: Colors.grey),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                subject.location,
-                                style: const TextStyle(
-                                    fontSize: 11, color: Colors.grey),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
+                    ),
                 ],
               ),
             ),

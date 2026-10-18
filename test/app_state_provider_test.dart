@@ -18,12 +18,10 @@ void main() {
         name: 'Data Structures',
         colorValue: AppTheme.subjectColors[0].toARGB32(),
         instructor: 'Dr. Smith',
-        location: 'Room 402B',
       );
 
       expect(subject.name, equals('Data Structures'));
       expect(subject.instructor, equals('Dr. Smith'));
-      expect(subject.location, equals('Room 402B'));
     });
 
     test('ScheduleBlockModel day name helper test', () {

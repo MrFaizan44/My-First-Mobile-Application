@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/subject_model.dart';
 import '../models/schedule_block_model.dart';
+import '../models/assignment_model.dart';
 import '../database/database_helper.dart';
 import '../theme/app_theme.dart';
 import '../widgets/subject_card.dart';
@@ -24,6 +26,7 @@ class _HomeViewState extends State<HomeView> {
   String _studentName = 'Alex Rivers';
   List<SubjectModel> _courses = [];
   List<ScheduleBlockModel> _todaySchedule = [];
+  List<AssignmentModel> _todayAssignments = [];
   bool _isLoading = true;
 
   @override
@@ -43,11 +46,26 @@ class _HomeViewState extends State<HomeView> {
     final todaySchedule =
         await DatabaseHelper.instance.getScheduleBlocksForDay(todayWeekday);
 
+    final allAssignments = await DatabaseHelper.instance.getAssignments(
+      pendingOnly: true,
+    );
+
+    // Filter today's or overdue assignments
+    final now = DateTime.now();
+    final todayAssignments = allAssignments.where((a) {
+      final isSameDay = a.dueDate.year == now.year &&
+          a.dueDate.month == now.month &&
+          a.dueDate.day == now.day;
+      final isOverdue = a.dueDate.isBefore(now);
+      return isSameDay || isOverdue;
+    }).toList();
+
     if (mounted) {
       setState(() {
         _studentName = savedName;
         _courses = courses;
         _todaySchedule = todaySchedule;
+        _todayAssignments = todayAssignments;
         _isLoading = false;
       });
     }
@@ -76,6 +94,20 @@ class _HomeViewState extends State<HomeView> {
       currentName: _studentName,
       onSaved: _loadDashboardData,
     );
+  }
+
+  Future<void> _toggleAssignmentCompletion(AssignmentModel assignment) async {
+    final updated = AssignmentModel(
+      id: assignment.id,
+      courseId: assignment.courseId,
+      title: assignment.title,
+      description: assignment.description,
+      dueDate: assignment.dueDate,
+      isCompleted: true,
+    );
+
+    await DatabaseHelper.instance.updateAssignment(updated);
+    _loadDashboardData();
   }
 
   Future<void> _confirmDeleteCourse(int id) async {
@@ -111,21 +143,19 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     final themeController = Provider.of<ThemeController>(context);
+    final isDark = themeController.isDark;
 
     return Scaffold(
       appBar: AppBar(
         title: const StudyTaskerLogo(size: 26),
         actions: [
-          // Quick Dark Mode Toggle Button
           IconButton(
             icon: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               child: Icon(
-                themeController.isDark
-                    ? Icons.light_mode_rounded
-                    : Icons.dark_mode_rounded,
-                key: ValueKey<bool>(themeController.isDark),
-                color: themeController.isDark ? Colors.amber : AppTheme.primaryColor,
+                isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                key: ValueKey<bool>(isDark),
+                color: isDark ? Colors.amber : AppTheme.primaryColor,
               ),
             ),
             tooltip: 'Toggle Theme',
@@ -144,12 +174,12 @@ class _HomeViewState extends State<HomeView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 1. Personalized Header Card with Student Avatar & Dark Mode Toggle
+                    // 1. Personalized Header Card
                     Card(
                       elevation: 2,
                       color: AppTheme.primaryColor,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20)),
+                          borderRadius: BorderRadius.circular(22)),
                       child: Padding(
                         padding: const EdgeInsets.all(20.0),
                         child: Row(
@@ -230,9 +260,61 @@ class _HomeViewState extends State<HomeView> {
                       ),
                     ),
 
+                    const SizedBox(height: 16),
+
+                    // 2. "Today at a Glance" Banner
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.brandIndigo.withAlpha(20),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: AppTheme.brandIndigo.withAlpha(60)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppTheme.brandIndigo,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(Icons.today_rounded,
+                                color: Colors.white, size: 24),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  DateFormat('EEEE, MMMM d, y')
+                                      .format(DateTime.now()),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${_todaySchedule.length} classes & ${_todayAssignments.length} pending tasks today.',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: isDark
+                                        ? Colors.grey[300]
+                                        : AppTheme.lightTextSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
                     const SizedBox(height: 24),
 
-                    // 2. Section Header: My Courses & Prominent + Add Course Button
+                    // 3. "My Courses" Section Header & + Add Course Button
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -269,7 +351,7 @@ class _HomeViewState extends State<HomeView> {
                     ),
                     const SizedBox(height: 14),
 
-                    // 3. Grid View displaying user-added courses
+                    // Grid View displaying courses
                     if (_courses.isEmpty)
                       _buildEmptyStateCard(
                         icon: Icons.menu_book_rounded,
@@ -304,7 +386,7 @@ class _HomeViewState extends State<HomeView> {
 
                     const SizedBox(height: 28),
 
-                    // 4. Quick Summary Section: Today's Schedule
+                    // 4. Today's Schedule Stream (Dynamic Real-Time List)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -319,7 +401,7 @@ class _HomeViewState extends State<HomeView> {
                           _getTodayDayName(),
                           style: TextStyle(
                             fontSize: 13,
-                            color: Theme.of(context).brightness == Brightness.dark
+                            color: isDark
                                 ? Colors.grey[400]
                                 : AppTheme.lightTextSecondary,
                             fontWeight: FontWeight.w600,
@@ -353,6 +435,58 @@ class _HomeViewState extends State<HomeView> {
                           );
                         },
                       ),
+
+                    // 5. Today's Due Assignments Quick Checklist
+                    if (_todayAssignments.isNotEmpty) ...[
+                      const SizedBox(height: 28),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Due Tasks Today',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            '${_todayAssignments.length} Pending',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _todayAssignments.length,
+                        itemBuilder: (context, index) {
+                          final assignment = _todayAssignments[index];
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            child: CheckboxListTile(
+                              value: assignment.isCompleted,
+                              activeColor: AppTheme.brandIndigo,
+                              title: Text(
+                                assignment.title,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 14),
+                              ),
+                              subtitle: Text(
+                                '${assignment.courseName ?? 'Course'} • Due: ${DateFormat('h:mm a').format(assignment.dueDate)}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              onChanged: (_) =>
+                                  _toggleAssignmentCompletion(assignment),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
 
                     const SizedBox(height: 24),
                   ],

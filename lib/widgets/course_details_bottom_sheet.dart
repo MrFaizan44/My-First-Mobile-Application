@@ -73,11 +73,11 @@ class CourseDetailsBottomSheet extends StatelessWidget {
               children: [
                 CircleAvatar(
                   backgroundColor: courseColor,
-                  radius: 16,
+                  radius: 18,
                   child: const Icon(Icons.book_rounded,
-                      color: Colors.white, size: 18),
+                      color: Colors.white, size: 20),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Text(
                     course.name,
@@ -100,17 +100,6 @@ class CourseDetailsBottomSheet extends StatelessWidget {
             label: 'Instructor',
             value: course.instructor.isNotEmpty
                 ? course.instructor
-                : 'Not specified',
-          ),
-          const SizedBox(height: 12),
-
-          // Location / Room / Link Info
-          _buildInfoRow(
-            context: context,
-            icon: Icons.location_on_outlined,
-            label: 'Room Number / Online Link',
-            value: course.location.isNotEmpty
-                ? course.location
                 : 'Not specified',
           ),
 

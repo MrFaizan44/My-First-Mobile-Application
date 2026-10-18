@@ -5,10 +5,11 @@ class ScheduleBlockModel {
   final int dayOfWeek; // 1 = Monday, 2 = Tuesday, ..., 7 = Sunday
   final String startTime;
   final String endTime;
-  final String room;
+  final String room; // Room Number / Building / Online Link unique to this slot
 
   // Joined fields from Subject table
   final String? subjectName;
+  final String? subjectInstructor;
   final int? subjectColorValue;
 
   ScheduleBlockModel({
@@ -19,6 +20,7 @@ class ScheduleBlockModel {
     required this.endTime,
     this.room = '',
     this.subjectName,
+    this.subjectInstructor,
     this.subjectColorValue,
   });
 
@@ -64,6 +66,7 @@ class ScheduleBlockModel {
       endTime: map['endTime'] as String,
       room: (map['room'] as String?) ?? '',
       subjectName: map['subjectName'] as String?,
+      subjectInstructor: map['subjectInstructor'] as String?,
       subjectColorValue: map['subjectColorValue'] as int?,
     );
   }

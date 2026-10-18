@@ -87,9 +87,6 @@ class _AddClassSlotBottomSheetState extends State<AddClassSlotBottomSheet> {
             );
           } else {
             _selectedCourse = courses[0];
-            if (_roomController.text.isEmpty) {
-              _roomController.text = _selectedCourse!.location;
-            }
           }
         }
         _isLoading = false;
@@ -268,9 +265,6 @@ class _AddClassSlotBottomSheetState extends State<AddClassSlotBottomSheet> {
                   if (val != null) {
                     setState(() {
                       _selectedCourse = val;
-                      if (_roomController.text.isEmpty) {
-                        _roomController.text = val.location;
-                      }
                     });
                   }
                 },

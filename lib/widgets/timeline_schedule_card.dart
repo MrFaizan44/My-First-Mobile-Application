@@ -144,21 +144,40 @@ class TimelineScheduleCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
+
+                  if (block.subjectInstructor != null &&
+                      block.subjectInstructor!.isNotEmpty) ...[
+                    Row(
+                      children: [
+                        const Icon(Icons.person_outline_rounded,
+                            size: 13, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Text(
+                          block.subjectInstructor!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                  ],
 
                   if (block.room.isNotEmpty)
                     Row(
                       children: [
                         const Icon(Icons.location_on_outlined,
-                            size: 14, color: Colors.grey),
+                            size: 13, color: AppTheme.brandIndigo),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             block.room,
                             style: const TextStyle(
                               fontSize: 12,
-                              color: Colors.grey,
-                              fontWeight: FontWeight.w500,
+                              color: AppTheme.brandIndigo,
+                              fontWeight: FontWeight.bold,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

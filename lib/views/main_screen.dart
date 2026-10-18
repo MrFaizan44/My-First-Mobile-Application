@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'home_view.dart';
 import 'schedule_view.dart';
+import 'assignments_view.dart';
 import 'notes_view.dart';
 
-/// Main Navigation Shell for StudyTasker containing 3 core tabs: Home, My Schedule, and Class Notes
+/// Main Navigation Shell for StudyTasker containing 4 core tabs
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -17,6 +18,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _views = const [
     HomeView(),
     ScheduleView(),
+    AssignmentsView(),
     NotesView(),
   ];
 
@@ -46,6 +48,11 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.calendar_today_outlined),
             selectedIcon: Icon(Icons.calendar_today_rounded),
             label: 'My Schedule',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.assignment_outlined),
+            selectedIcon: Icon(Icons.assignment_rounded),
+            label: 'Assignments',
           ),
           NavigationDestination(
             icon: Icon(Icons.book_outlined),
