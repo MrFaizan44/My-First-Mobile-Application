@@ -30,7 +30,6 @@ class _NotesViewState extends State<NotesView> {
   Future<void> _loadNotesAndCourses() async {
     setState(() => _isLoading = true);
 
-    // Fetch user courses and notes from local SQLite database
     final courses = await DatabaseHelper.instance.getSubjects();
     final notes = await DatabaseHelper.instance.getClassNotes(
       subjectId: _selectedCourseFilter?.id,
@@ -86,7 +85,8 @@ class _NotesViewState extends State<NotesView> {
 
   @override
   Widget build(BuildContext context) {
-    // Live filter search query
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final filteredNotes = _notes.where((note) {
       final matchesSearch = note.title
               .toLowerCase()
@@ -96,15 +96,13 @@ class _NotesViewState extends State<NotesView> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         title: const Text('Class Notes & Resources'),
       ),
       body: Column(
         children: [
-          // Search & Filter Header Section
           Container(
-            color: Colors.white,
+            color: isDark ? AppTheme.darkSurface : Colors.white,
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
@@ -125,18 +123,22 @@ class _NotesViewState extends State<NotesView> {
                         : null,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
+                      borderSide: BorderSide(
+                          color: isDark ? AppTheme.darkBorder : Colors.grey[300]!),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
+                      borderSide: BorderSide(
+                          color: isDark ? AppTheme.darkBorder : Colors.grey[300]!),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: AppTheme.accentColor),
+                      borderSide: const BorderSide(color: AppTheme.brandIndigo),
                     ),
                     filled: true,
-                    fillColor: AppTheme.backgroundColor,
+                    fillColor: isDark
+                        ? AppTheme.darkBackground
+                        : AppTheme.lightBackground,
                     contentPadding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   onChanged: (val) {
@@ -146,7 +148,6 @@ class _NotesViewState extends State<NotesView> {
                   },
                 ),
 
-                // 1. Course Filter Chips Bar
                 if (_courses.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   SingleChildScrollView(
@@ -165,7 +166,9 @@ class _NotesViewState extends State<NotesView> {
                                 : FontWeight.normal,
                             color: _selectedCourseFilter == null
                                 ? Colors.white
-                                : AppTheme.textPrimary,
+                                : (isDark
+                                    ? AppTheme.darkTextPrimary
+                                    : AppTheme.lightTextPrimary),
                           ),
                           onSelected: (val) {
                             setState(() {
@@ -181,7 +184,7 @@ class _NotesViewState extends State<NotesView> {
                           return Padding(
                             padding: const EdgeInsets.only(right: 8.0),
                             child: FilterChip(
-                              label: Text(course.code),
+                              label: Text(course.name),
                               selected: isSelected,
                               selectedColor: course.color,
                               checkmarkColor: Colors.white,
@@ -192,7 +195,9 @@ class _NotesViewState extends State<NotesView> {
                                     : FontWeight.normal,
                                 color: isSelected
                                     ? Colors.white
-                                    : AppTheme.textPrimary,
+                                    : (isDark
+                                        ? AppTheme.darkTextPrimary
+                                        : AppTheme.lightTextPrimary),
                               ),
                               onSelected: (val) {
                                 setState(() {
@@ -236,10 +241,9 @@ class _NotesViewState extends State<NotesView> {
         ],
       ),
 
-      // Floating Action Button
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openAddNoteModal(),
-        backgroundColor: AppTheme.accentColor,
+        backgroundColor: AppTheme.brandIndigo,
         icon: const Icon(Icons.note_add_rounded, color: Colors.white),
         label: const Text(
           'Add Note',
@@ -267,12 +271,11 @@ class _NotesViewState extends State<NotesView> {
               _searchQuery.isNotEmpty
                   ? 'No Notes Found for "$_searchQuery"'
                   : _selectedCourseFilter != null
-                      ? 'No Notes for ${_selectedCourseFilter!.code}'
+                      ? 'No Notes for ${_selectedCourseFilter!.name}'
                       : 'No Class Notes Yet',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -282,7 +285,7 @@ class _NotesViewState extends State<NotesView> {
                   ? 'Try searching for another keyword or clear the search field.'
                   : 'Tap "+ Add Note" below to save quick notes, lecture summaries, or Google Drive / Zoom links.',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+              style: const TextStyle(fontSize: 13, color: Colors.grey),
             ),
           ],
         ),

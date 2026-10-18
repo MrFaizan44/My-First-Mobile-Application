@@ -113,13 +113,15 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = isDark ? AppTheme.darkSurface : Colors.white;
 
     if (_isLoading) {
       return Container(
         height: 200,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: const Center(child: CircularProgressIndicator()),
       );
@@ -127,9 +129,9 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
 
     if (_courses.isEmpty) {
       return Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -142,14 +144,13 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
               ),
             ),
             const SizedBox(height: 6),
             const Text(
               'Please add at least one course on the Home Dashboard before creating class notes or resources.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+              style: TextStyle(fontSize: 13, color: Colors.grey),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
@@ -166,14 +167,14 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
     }
 
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: EdgeInsets.only(
         left: 20,
         right: 20,
-        top: 20,
+        top: 12,
         bottom: bottomInset + 20,
       ),
       child: SingleChildScrollView(
@@ -183,7 +184,19 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header title bar
+              // Drag Handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -194,7 +207,6 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
                     ),
                   ),
                   IconButton(
@@ -205,14 +217,13 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
               ),
               const SizedBox(height: 16),
 
-              // Course Selector Dropdown
               DropdownButtonFormField<SubjectModel>(
                 initialValue: _selectedCourse,
                 decoration: InputDecoration(
                   labelText: 'Select Course *',
                   prefixIcon: const Icon(Icons.book_outlined),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   isDense: true,
                 ),
@@ -223,8 +234,7 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
                       children: [
                         CircleAvatar(backgroundColor: course.color, radius: 6),
                         const SizedBox(width: 8),
-                        Text('${course.code} - ${course.name}',
-                            style: const TextStyle(fontSize: 13)),
+                        Text(course.name, style: const TextStyle(fontSize: 13)),
                       ],
                     ),
                   );
@@ -237,9 +247,8 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
                   }
                 },
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
-              // Note Title
               TextFormField(
                 controller: _titleController,
                 decoration: InputDecoration(
@@ -247,7 +256,7 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
                   hintText: 'e.g. Chapter 4 Lecture Notes or Drive Link',
                   prefixIcon: const Icon(Icons.title_rounded),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   isDense: true,
                 ),
@@ -255,9 +264,8 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
                     ? 'Please enter a title'
                     : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
-              // Note Content / Links
               TextFormField(
                 controller: _contentController,
                 maxLines: 5,
@@ -267,7 +275,7 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
                       'Type lecture summaries, key formulas, or paste Zoom / Google Drive resource links...',
                   alignLabelWithHint: true,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   isDense: true,
                 ),
@@ -277,7 +285,6 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
               ),
               const SizedBox(height: 24),
 
-              // Submit Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -296,7 +303,7 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
                         _selectedCourse?.color ?? AppTheme.primaryColor,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                 ),

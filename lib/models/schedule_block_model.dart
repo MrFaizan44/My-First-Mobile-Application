@@ -1,4 +1,4 @@
-/// User-defined timetable / schedule block model stored in SQLite
+/// User timetable schedule block model stored in SQLite
 class ScheduleBlockModel {
   final int? id;
   final int subjectId;
@@ -9,7 +9,6 @@ class ScheduleBlockModel {
 
   // Joined fields from Subject table
   final String? subjectName;
-  final String? subjectCode;
   final int? subjectColorValue;
 
   ScheduleBlockModel({
@@ -20,11 +19,10 @@ class ScheduleBlockModel {
     required this.endTime,
     this.room = '',
     this.subjectName,
-    this.subjectCode,
     this.subjectColorValue,
   });
 
-  /// Day name string (e.g., "Monday")
+  /// Day name string
   String get dayName {
     switch (dayOfWeek) {
       case 1:
@@ -66,7 +64,6 @@ class ScheduleBlockModel {
       endTime: map['endTime'] as String,
       room: (map['room'] as String?) ?? '',
       subjectName: map['subjectName'] as String?,
-      subjectCode: map['subjectCode'] as String?,
       subjectColorValue: map['subjectColorValue'] as int?,
     );
   }

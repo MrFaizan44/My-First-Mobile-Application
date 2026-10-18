@@ -37,7 +37,6 @@ class _ScheduleViewState extends State<ScheduleView> {
   Future<void> _loadScheduleForDay() async {
     setState(() => _isLoading = true);
 
-    // Fetch schedule blocks for the selected day from SQLite database
     final blocks =
         await DatabaseHelper.instance.getScheduleBlocksForDay(_selectedDay);
 
@@ -90,8 +89,9 @@ class _ScheduleViewState extends State<ScheduleView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         title: const Text('My Schedule & Timetable'),
       ),
@@ -118,12 +118,16 @@ class _ScheduleViewState extends State<ScheduleView> {
                         fontSize: 13,
                         fontWeight:
                             isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected ? Colors.white : AppTheme.textPrimary,
+                        color: isSelected
+                            ? Colors.white
+                            : (isDark
+                                ? AppTheme.darkTextPrimary
+                                : AppTheme.lightTextPrimary),
                       ),
                     ),
                     selected: isSelected,
                     selectedColor: AppTheme.primaryColor,
-                    backgroundColor: Colors.white,
+                    backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -143,7 +147,7 @@ class _ScheduleViewState extends State<ScheduleView> {
 
           const SizedBox(height: 16),
 
-          // 3. Vertical Hourly Timeline View
+          // 2. Vertical Hourly Timeline View
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -170,10 +174,10 @@ class _ScheduleViewState extends State<ScheduleView> {
         ],
       ),
 
-      // 2. "+ Add Class Slot" Floating Action Button
+      // 3. "+ Add Class Slot" Floating Action Button
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openAddClassSlotModal(),
-        backgroundColor: AppTheme.accentColor,
+        backgroundColor: AppTheme.brandIndigo,
         icon: const Icon(Icons.add_rounded, color: Colors.white),
         label: const Text(
           'Add Class Slot',
@@ -200,18 +204,25 @@ class _ScheduleViewState extends State<ScheduleView> {
                 size: 56, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              'No Classes for $dayName',
-              style: const TextStyle(
+              'No Classes Scheduled Today',
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppTheme.darkTextPrimary
+                    : AppTheme.lightTextPrimary,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Tap "+ Add Class Slot" below to add a class block to your $dayName timetable.',
+              'No classes scheduled today. Time to relax or tap "+ Add Class Slot" below to build your $dayName timetable.',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+              style: TextStyle(
+                fontSize: 13,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppTheme.darkTextSecondary
+                    : AppTheme.lightTextSecondary,
+              ),
             ),
           ],
         ),

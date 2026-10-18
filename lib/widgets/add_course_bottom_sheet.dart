@@ -14,7 +14,6 @@ class AddCourseBottomSheet extends StatefulWidget {
     required this.onSaved,
   });
 
-  /// Helper static method to open the bottom sheet cleanly
   static void show(
     BuildContext context, {
     SubjectModel? initialCourse,
@@ -38,7 +37,6 @@ class AddCourseBottomSheet extends StatefulWidget {
 class _AddCourseBottomSheetState extends State<AddCourseBottomSheet> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-  late TextEditingController _codeController;
   late TextEditingController _instructorController;
   late TextEditingController _locationController;
   late Color _selectedColor;
@@ -48,8 +46,6 @@ class _AddCourseBottomSheetState extends State<AddCourseBottomSheet> {
     super.initState();
     _nameController =
         TextEditingController(text: widget.initialCourse?.name ?? '');
-    _codeController =
-        TextEditingController(text: widget.initialCourse?.code ?? '');
     _instructorController =
         TextEditingController(text: widget.initialCourse?.instructor ?? '');
     _locationController =
@@ -62,7 +58,6 @@ class _AddCourseBottomSheetState extends State<AddCourseBottomSheet> {
   @override
   void dispose() {
     _nameController.dispose();
-    _codeController.dispose();
     _instructorController.dispose();
     _locationController.dispose();
     super.dispose();
@@ -73,7 +68,6 @@ class _AddCourseBottomSheetState extends State<AddCourseBottomSheet> {
       final course = SubjectModel(
         id: widget.initialCourse?.id,
         name: _nameController.text.trim(),
-        code: _codeController.text.trim().toUpperCase(),
         colorValue: _selectedColor.toARGB32(),
         instructor: _instructorController.text.trim(),
         location: _locationController.text.trim(),
@@ -93,16 +87,18 @@ class _AddCourseBottomSheetState extends State<AddCourseBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = isDark ? AppTheme.darkSurface : Colors.white;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: EdgeInsets.only(
         left: 20,
         right: 20,
-        top: 20,
+        top: 12,
         bottom: bottomInset + 20,
       ),
       child: SingleChildScrollView(
@@ -112,6 +108,19 @@ class _AddCourseBottomSheetState extends State<AddCourseBottomSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Drag Handle Bar Indicator
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+
               // Header title bar
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -121,7 +130,6 @@ class _AddCourseBottomSheetState extends State<AddCourseBottomSheet> {
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
                     ),
                   ),
                   IconButton(
@@ -137,34 +145,17 @@ class _AddCourseBottomSheetState extends State<AddCourseBottomSheet> {
                 controller: _nameController,
                 decoration: InputDecoration(
                   labelText: 'Course Name *',
-                  hintText: 'e.g. Physics, Data Structures',
+                  hintText: 'e.g. Mathematics, Computer Networks',
                   prefixIcon: const Icon(Icons.book_outlined),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   isDense: true,
                 ),
                 validator: (val) =>
-                    val == null || val.trim().isEmpty ? 'Please enter a course name' : null,
+                    val == null || val.trim().isEmpty ? 'Please enter course name' : null,
               ),
-              const SizedBox(height: 12),
-
-              // Course Code
-              TextFormField(
-                controller: _codeController,
-                decoration: InputDecoration(
-                  labelText: 'Course Code *',
-                  hintText: 'e.g. PHYS101, CS201',
-                  prefixIcon: const Icon(Icons.tag_rounded),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  isDense: true,
-                ),
-                validator: (val) =>
-                    val == null || val.trim().isEmpty ? 'Please enter a course code' : null,
-              ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
               // Instructor Name
               TextFormField(
@@ -174,12 +165,12 @@ class _AddCourseBottomSheetState extends State<AddCourseBottomSheet> {
                   hintText: 'e.g. Dr. Sarah Jenkins',
                   prefixIcon: const Icon(Icons.person_outline_rounded),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   isDense: true,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
               // Room Number / Online Class Link
               TextFormField(
@@ -189,20 +180,19 @@ class _AddCourseBottomSheetState extends State<AddCourseBottomSheet> {
                   hintText: 'e.g. Room 402B or https://meet.google.com/...',
                   prefixIcon: const Icon(Icons.location_on_outlined),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   isDense: true,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
 
-              // Color Theme Selector
+              // Palette Color Picker (Preset of 8 soft pastels)
               const Text(
-                'Select Color Theme:',
+                'Color Palette Theme:',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
                 ),
               ),
               const SizedBox(height: 10),
@@ -261,7 +251,7 @@ class _AddCourseBottomSheetState extends State<AddCourseBottomSheet> {
                     backgroundColor: _selectedColor,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                 ),

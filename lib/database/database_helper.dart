@@ -3,9 +3,8 @@ import 'package:sqflite/sqflite.dart';
 import '../models/subject_model.dart';
 import '../models/schedule_block_model.dart';
 import '../models/class_note_model.dart';
-import '../models/assignment_model.dart';
 
-/// Local SQLite Database Helper for StudyTasker offline persistence
+/// Local SQLite Database Helper for StudyTasker high-performance offline persistence
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._internal();
   static Database? _database;
@@ -21,25 +20,23 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     final String dbPath = await getDatabasesPath();
-    final String path = join(dbPath, 'studytasker_student.db');
+    final String path = join(dbPath, 'studytasker_v3.db');
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 1,
       onCreate: _createDb,
-      onUpgrade: _onUpgrade,
     );
   }
 
   Future<void> _createDb(Database db, int version) async {
     await db.execute('PRAGMA foreign_keys = ON;');
 
-    // Table 1: User-Defined Subjects / Courses
+    // Table 1: User-Defined Courses (Course Name, Instructor Name, Room/Link, Color)
     await db.execute('''
       CREATE TABLE subjects (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        code TEXT NOT NULL,
         colorValue INTEGER NOT NULL,
         instructor TEXT,
         location TEXT
@@ -70,39 +67,10 @@ class DatabaseHelper {
         FOREIGN KEY (subjectId) REFERENCES subjects (id) ON DELETE CASCADE
       );
     ''');
-
-    // Table 4: Course Assignments & Due Dates
-    await db.execute('''
-      CREATE TABLE assignments (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        courseId INTEGER NOT NULL,
-        title TEXT NOT NULL,
-        description TEXT,
-        dueDate TEXT NOT NULL,
-        isCompleted INTEGER NOT NULL DEFAULT 0,
-        FOREIGN KEY (courseId) REFERENCES subjects (id) ON DELETE CASCADE
-      );
-    ''');
-  }
-
-  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await db.execute('''
-        CREATE TABLE IF NOT EXISTS assignments (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          courseId INTEGER NOT NULL,
-          title TEXT NOT NULL,
-          description TEXT,
-          dueDate TEXT NOT NULL,
-          isCompleted INTEGER NOT NULL DEFAULT 0,
-          FOREIGN KEY (courseId) REFERENCES subjects (id) ON DELETE CASCADE
-        );
-      ''');
-    }
   }
 
   // ==========================================
-  // SUBJECT CRUD OPERATIONS
+  // COURSE CRUD OPERATIONS
   // ==========================================
 
   Future<int> insertSubject(SubjectModel subject) async {
@@ -156,7 +124,6 @@ class DatabaseHelper {
         s.endTime,
         s.room,
         sub.name AS subjectName,
-        sub.code AS subjectCode,
         sub.colorValue AS subjectColorValue
       FROM schedule_blocks s
       INNER JOIN subjects sub ON s.subjectId = sub.id
@@ -179,7 +146,6 @@ class DatabaseHelper {
         s.endTime,
         s.room,
         sub.name AS subjectName,
-        sub.code AS subjectCode,
         sub.colorValue AS subjectColorValue
       FROM schedule_blocks s
       INNER JOIN subjects sub ON s.subjectId = sub.id
@@ -259,76 +225,6 @@ class DatabaseHelper {
     final db = await database;
     return await db.delete(
       'class_notes',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  // ==========================================
-  // ASSIGNMENTS CRUD OPERATIONS
-  // ==========================================
-
-  Future<int> insertAssignment(AssignmentModel assignment) async {
-    final db = await database;
-    return await db.insert('assignments', assignment.toMap());
-  }
-
-  Future<List<AssignmentModel>> getAssignments({
-    int? courseId,
-    bool? pendingOnly,
-  }) async {
-    final db = await database;
-    String query = '''
-      SELECT 
-        a.id,
-        a.courseId,
-        a.title,
-        a.description,
-        a.dueDate,
-        a.isCompleted,
-        sub.name AS courseName,
-        sub.code AS courseCode,
-        sub.colorValue AS courseColorValue
-      FROM assignments a
-      INNER JOIN subjects sub ON a.courseId = sub.id
-    ''';
-
-    List<String> conditions = [];
-    List<dynamic> whereArgs = [];
-
-    if (courseId != null) {
-      conditions.add('a.courseId = ?');
-      whereArgs.add(courseId);
-    }
-
-    if (pendingOnly == true) {
-      conditions.add('a.isCompleted = 0');
-    }
-
-    if (conditions.isNotEmpty) {
-      query += ' WHERE ${conditions.join(' AND ')}';
-    }
-
-    query += ' ORDER BY a.dueDate ASC;';
-
-    final List<Map<String, dynamic>> maps = await db.rawQuery(query, whereArgs);
-    return maps.map((map) => AssignmentModel.fromMap(map)).toList();
-  }
-
-  Future<int> updateAssignment(AssignmentModel assignment) async {
-    final db = await database;
-    return await db.update(
-      'assignments',
-      assignment.toMap(),
-      where: 'id = ?',
-      whereArgs: [assignment.id],
-    );
-  }
-
-  Future<int> deleteAssignment(int id) async {
-    final db = await database;
-    return await db.delete(
-      'assignments',
       where: 'id = ?',
       whereArgs: [id],
     );

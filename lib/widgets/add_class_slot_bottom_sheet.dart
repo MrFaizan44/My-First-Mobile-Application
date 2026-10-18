@@ -138,13 +138,15 @@ class _AddClassSlotBottomSheetState extends State<AddClassSlotBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = isDark ? AppTheme.darkSurface : Colors.white;
 
     if (_isLoading) {
       return Container(
         height: 200,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: const Center(child: CircularProgressIndicator()),
       );
@@ -152,9 +154,9 @@ class _AddClassSlotBottomSheetState extends State<AddClassSlotBottomSheet> {
 
     if (_courses.isEmpty) {
       return Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -167,14 +169,13 @@ class _AddClassSlotBottomSheetState extends State<AddClassSlotBottomSheet> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
               ),
             ),
             const SizedBox(height: 6),
             const Text(
               'Please add at least one course on the Home Dashboard before creating class timetable slots.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+              style: TextStyle(fontSize: 13, color: Colors.grey),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
@@ -191,14 +192,14 @@ class _AddClassSlotBottomSheetState extends State<AddClassSlotBottomSheet> {
     }
 
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: EdgeInsets.only(
         left: 20,
         right: 20,
-        top: 20,
+        top: 12,
         bottom: bottomInset + 20,
       ),
       child: SingleChildScrollView(
@@ -208,7 +209,19 @@ class _AddClassSlotBottomSheetState extends State<AddClassSlotBottomSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header title bar
+              // Drag Handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -219,7 +232,6 @@ class _AddClassSlotBottomSheetState extends State<AddClassSlotBottomSheet> {
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
                     ),
                   ),
                   IconButton(
@@ -230,14 +242,13 @@ class _AddClassSlotBottomSheetState extends State<AddClassSlotBottomSheet> {
               ),
               const SizedBox(height: 16),
 
-              // Course Selection Dropdown
               DropdownButtonFormField<SubjectModel>(
                 initialValue: _selectedCourse,
                 decoration: InputDecoration(
                   labelText: 'Select Course *',
                   prefixIcon: const Icon(Icons.book_outlined),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   isDense: true,
                 ),
@@ -248,8 +259,7 @@ class _AddClassSlotBottomSheetState extends State<AddClassSlotBottomSheet> {
                       children: [
                         CircleAvatar(backgroundColor: course.color, radius: 6),
                         const SizedBox(width: 8),
-                        Text('${course.code} - ${course.name}',
-                            style: const TextStyle(fontSize: 13)),
+                        Text(course.name, style: const TextStyle(fontSize: 13)),
                       ],
                     ),
                   );
@@ -265,16 +275,15 @@ class _AddClassSlotBottomSheetState extends State<AddClassSlotBottomSheet> {
                   }
                 },
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
-              // Day of Week Dropdown
               DropdownButtonFormField<int>(
                 initialValue: _selectedDay,
                 decoration: InputDecoration(
                   labelText: 'Day of Week *',
                   prefixIcon: const Icon(Icons.calendar_today_outlined),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   isDense: true,
                 ),
@@ -292,9 +301,8 @@ class _AddClassSlotBottomSheetState extends State<AddClassSlotBottomSheet> {
                   }
                 },
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
-              // Time Range Pickers
               Row(
                 children: [
                   Expanded(
@@ -305,7 +313,7 @@ class _AddClassSlotBottomSheetState extends State<AddClassSlotBottomSheet> {
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
                     ),
@@ -319,16 +327,15 @@ class _AddClassSlotBottomSheetState extends State<AddClassSlotBottomSheet> {
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
-              // Specific Room Number or Meeting Link
               TextFormField(
                 controller: _roomController,
                 decoration: InputDecoration(
@@ -336,14 +343,13 @@ class _AddClassSlotBottomSheetState extends State<AddClassSlotBottomSheet> {
                   hintText: 'e.g. Room 302 or Zoom / Meet Link',
                   prefixIcon: const Icon(Icons.location_on_outlined),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   isDense: true,
                 ),
               ),
               const SizedBox(height: 24),
 
-              // Submit Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -363,7 +369,7 @@ class _AddClassSlotBottomSheetState extends State<AddClassSlotBottomSheet> {
                     backgroundColor: _selectedCourse?.color ?? AppTheme.primaryColor,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                 ),

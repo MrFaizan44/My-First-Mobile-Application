@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 
-/// User-defined subject model stored in SQLite database
+/// User-defined course model stored in SQLite database
 class SubjectModel {
   final int? id;
-  final String name;
-  final String code;
+  final String name; // e.g. Mathematics, Computer Networks
   final int colorValue;
   final String instructor;
-  final String location;
+  final String location; // Room Number or Online Class Link
 
   SubjectModel({
     this.id,
     required this.name,
-    required this.code,
     required this.colorValue,
     this.instructor = '',
     this.location = '',
@@ -24,7 +22,6 @@ class SubjectModel {
     return {
       'id': id,
       'name': name,
-      'code': code,
       'colorValue': colorValue,
       'instructor': instructor,
       'location': location,
@@ -35,7 +32,6 @@ class SubjectModel {
     return SubjectModel(
       id: map['id'] as int?,
       name: map['name'] as String,
-      code: map['code'] as String,
       colorValue: map['colorValue'] as int,
       instructor: (map['instructor'] as String?) ?? '',
       location: (map['location'] as String?) ?? '',

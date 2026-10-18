@@ -35,42 +35,47 @@ class CourseDetailsBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color courseColor = course.color;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = isDark ? AppTheme.darkSurface : Colors.white;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Drag Handle Bar
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+
           // Header Banner
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: courseColor.withAlpha(20),
+              color: courseColor.withAlpha(25),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: courseColor.withAlpha(60)),
             ),
             child: Row(
               children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: courseColor,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    course.code,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
+                CircleAvatar(
+                  backgroundColor: courseColor,
+                  radius: 16,
+                  child: const Icon(Icons.book_rounded,
+                      color: Colors.white, size: 18),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -79,7 +84,6 @@ class CourseDetailsBottomSheet extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
                     ),
                   ),
                 ),
@@ -91,6 +95,7 @@ class CourseDetailsBottomSheet extends StatelessWidget {
 
           // Instructor Info
           _buildInfoRow(
+            context: context,
             icon: Icons.person_outline_rounded,
             label: 'Instructor',
             value: course.instructor.isNotEmpty
@@ -101,8 +106,9 @@ class CourseDetailsBottomSheet extends StatelessWidget {
 
           // Location / Room / Link Info
           _buildInfoRow(
+            context: context,
             icon: Icons.location_on_outlined,
-            label: 'Room / Online Class Link',
+            label: 'Room Number / Online Link',
             value: course.location.isNotEmpty
                 ? course.location
                 : 'Not specified',
@@ -122,11 +128,9 @@ class CourseDetailsBottomSheet extends StatelessWidget {
                   icon: const Icon(Icons.edit_outlined, size: 18),
                   label: const Text('Edit Course'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.primaryColor,
-                    side: const BorderSide(color: Colors.grey),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                 ),
@@ -146,7 +150,7 @@ class CourseDetailsBottomSheet extends StatelessWidget {
                     backgroundColor: Colors.redAccent,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                 ),
@@ -159,19 +163,22 @@ class CourseDetailsBottomSheet extends StatelessWidget {
   }
 
   Widget _buildInfoRow({
+    required BuildContext context,
     required IconData icon,
     required String label,
     required String value,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.grey[100],
+            color: isDark ? Colors.white10 : Colors.grey[100],
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: AppTheme.textSecondary, size: 20),
+          child: Icon(icon, color: AppTheme.brandIndigo, size: 20),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -180,9 +187,9 @@ class CourseDetailsBottomSheet extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
-                  color: AppTheme.textSecondary,
+                  color: isDark ? Colors.grey[400] : AppTheme.lightTextSecondary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -192,7 +199,6 @@ class CourseDetailsBottomSheet extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
                 ),
               ),
             ],

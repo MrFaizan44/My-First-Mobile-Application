@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/subject_model.dart';
 import '../models/schedule_block_model.dart';
@@ -109,10 +110,29 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
+    final themeController = Provider.of<ThemeController>(context);
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         title: const StudyTaskerLogo(size: 26),
+        actions: [
+          // Quick Dark Mode Toggle Button
+          IconButton(
+            icon: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: Icon(
+                themeController.isDark
+                    ? Icons.light_mode_rounded
+                    : Icons.dark_mode_rounded,
+                key: ValueKey<bool>(themeController.isDark),
+                color: themeController.isDark ? Colors.amber : AppTheme.primaryColor,
+              ),
+            ),
+            tooltip: 'Toggle Theme',
+            onPressed: () => themeController.toggleTheme(),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -124,7 +144,7 @@ class _HomeViewState extends State<HomeView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 1. Personalized Header Card with Student Name & Avatar
+                    // 1. Personalized Header Card with Student Avatar & Dark Mode Toggle
                     Card(
                       elevation: 2,
                       color: AppTheme.primaryColor,
@@ -155,7 +175,7 @@ class _HomeViewState extends State<HomeView> {
                                     right: 0,
                                     child: CircleAvatar(
                                       radius: 10,
-                                      backgroundColor: AppTheme.accentColor,
+                                      backgroundColor: AppTheme.brandIndigo,
                                       child: const Icon(Icons.edit_rounded,
                                           size: 10, color: Colors.white),
                                     ),
@@ -221,7 +241,6 @@ class _HomeViewState extends State<HomeView> {
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
                           ),
                         ),
                         ElevatedButton.icon(
@@ -237,7 +256,7 @@ class _HomeViewState extends State<HomeView> {
                             ),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.accentColor,
+                            backgroundColor: AppTheme.brandIndigo,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 10),
                             elevation: 2,
@@ -250,7 +269,7 @@ class _HomeViewState extends State<HomeView> {
                     ),
                     const SizedBox(height: 14),
 
-                    // 3. Grid View displaying all user-added courses
+                    // 3. Grid View displaying user-added courses
                     if (_courses.isEmpty)
                       _buildEmptyStateCard(
                         icon: Icons.menu_book_rounded,
@@ -294,14 +313,15 @@ class _HomeViewState extends State<HomeView> {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
                           ),
                         ),
                         Text(
                           _getTodayDayName(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: AppTheme.textSecondary,
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey[400]
+                                : AppTheme.lightTextSecondary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -312,9 +332,9 @@ class _HomeViewState extends State<HomeView> {
                     if (_todaySchedule.isEmpty)
                       _buildEmptyStateCard(
                         icon: Icons.event_available_rounded,
-                        title: 'No Classes Today',
+                        title: 'No Classes Scheduled Today',
                         message:
-                            'Your schedule is clear for today! Head over to the "My Schedule" tab to set up timetable blocks.',
+                            'No classes scheduled today. Time to relax or head over to the "My Schedule" tab to set up timetable blocks.',
                       )
                     else
                       ListView.builder(
@@ -351,7 +371,6 @@ class _HomeViewState extends State<HomeView> {
   }) {
     return Card(
       elevation: 0,
-      color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: Colors.grey[300]!),
@@ -367,22 +386,21 @@ class _HomeViewState extends State<HomeView> {
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 14),
               OutlinedButton(
                 onPressed: onAction,
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppTheme.accentColor,
-                  side: const BorderSide(color: AppTheme.accentColor),
+                  foregroundColor: AppTheme.brandIndigo,
+                  side: const BorderSide(color: AppTheme.brandIndigo),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
