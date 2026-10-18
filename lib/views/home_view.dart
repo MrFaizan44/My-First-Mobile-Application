@@ -6,8 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/subject_model.dart';
 import '../models/schedule_block_model.dart';
 import '../models/assignment_model.dart';
-import '../models/exam_model.dart';
-import '../models/quiz_model.dart';
 import '../database/database_helper.dart';
 import '../theme/app_theme.dart';
 import '../widgets/subject_card.dart';
@@ -15,10 +13,9 @@ import '../widgets/timeline_schedule_card.dart';
 import '../widgets/swipe_assignment_card.dart';
 import '../widgets/add_course_bottom_sheet.dart';
 import '../widgets/course_details_bottom_sheet.dart';
-import '../widgets/add_exam_bottom_sheet.dart';
-import '../widgets/add_quiz_bottom_sheet.dart';
 import '../widgets/edit_profile_dialog.dart';
 import '../widgets/study_tasker_logo.dart';
+import 'exams_view.dart';
 
 /// Home Dashboard Tab for StudyTasker
 class HomeView extends StatefulWidget {
@@ -33,8 +30,6 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   List<SubjectModel> _courses = [];
   List<ScheduleBlockModel> _todaySchedule = [];
   List<AssignmentModel> _todayAssignments = [];
-  List<ExamModel> _upcomingExams = [];
-  List<QuizModel> _upcomingQuizzes = [];
   bool _isLoading = true;
   Timer? _midnightTimer;
   Timer? _periodicRefreshTimer;
@@ -107,17 +102,12 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       return isSameDay || isOverdue;
     }).toList();
 
-    final exams = await DatabaseHelper.instance.getExams();
-    final quizzes = await DatabaseHelper.instance.getQuizzes();
-
     if (mounted) {
       setState(() {
         _studentName = savedName;
         _courses = courses;
         _todaySchedule = upcomingTodaySchedule;
         _todayAssignments = todayAssignments;
-        _upcomingExams = exams;
-        _upcomingQuizzes = quizzes;
         _isLoading = false;
       });
     }
@@ -140,12 +130,10 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     );
   }
 
-  void _openAddExamModal() {
-    AddExamBottomSheet.show(context, onSaved: _loadDashboardData);
-  }
-
-  void _openAddQuizModal() {
-    AddQuizBottomSheet.show(context, onSaved: _loadDashboardData);
+  void _openExamsHub() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const ExamsView()),
+    );
   }
 
   void _openEditProfileDialog() {
@@ -209,6 +197,20 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       appBar: AppBar(
         title: const StudyTaskerLogo(size: 26),
         actions: [
+          // Dedicated Exams Hub Action Button
+          TextButton.icon(
+            onPressed: _openExamsHub,
+            icon: const Icon(Icons.assignment_turned_in_rounded,
+                size: 18, color: AppTheme.brandRose),
+            label: const Text(
+              'Exams 🎓',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.brandRose,
+              ),
+            ),
+          ),
           IconButton(
             icon: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
@@ -377,7 +379,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
                     const SizedBox(height: 24),
 
-                    // 3. "My Courses" Grid Section
+                    // 3. "My Courses" Section Header & + Add Course Button
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -540,130 +542,8 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                           );
                         },
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 24),
                     ],
-
-                    // 6. Exams & Quizzes Tracker Section
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Exams & Quizzes',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            OutlinedButton.icon(
-                              onPressed: _openAddQuizModal,
-                              icon: const Icon(Icons.quiz_outlined, size: 16),
-                              label: const Text('Quiz',
-                                  style: TextStyle(fontSize: 12)),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 6),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            ElevatedButton.icon(
-                              onPressed: _openAddExamModal,
-                              icon: const Icon(Icons.assignment_turned_in,
-                                  size: 16, color: Colors.white),
-                              label: const Text('Exam',
-                                  style: TextStyle(
-                                      fontSize: 12, color: Colors.white)),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.brandRose,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 6),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    if (_upcomingExams.isEmpty && _upcomingQuizzes.isEmpty)
-                      _buildEmptyStateCard(
-                        icon: Icons.assignment_outlined,
-                        title: 'No Upcoming Exams or Quizzes',
-                        message:
-                            'Tap the "+ Exam" or "+ Quiz" buttons above to track test dates and room venues!',
-                      )
-                    else ...[
-                      // Upcoming Exams
-                      ..._upcomingExams.map((exam) {
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: AppTheme.brandRose,
-                              child: const Icon(Icons.assignment_turned_in,
-                                  color: Colors.white, size: 20),
-                            ),
-                            title: Text(
-                              '${exam.courseName ?? 'Course'}: ${exam.title}',
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 14),
-                            ),
-                            subtitle: Text(
-                              'Date: ${DateFormat('EEE, MMM d • h:mm a').format(exam.examDate)}${exam.room.isNotEmpty ? ' • Room: ${exam.room}' : ''}',
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete_outline_rounded,
-                                  color: Colors.grey, size: 20),
-                              onPressed: () async {
-                                await DatabaseHelper.instance.deleteExam(exam.id!);
-                                _loadDashboardData();
-                              },
-                            ),
-                          ),
-                        );
-                      }),
-
-                      // Upcoming Quizzes
-                      ..._upcomingQuizzes.map((quiz) {
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: AppTheme.brandCyan,
-                              child: const Icon(Icons.quiz_outlined,
-                                  color: Colors.white, size: 20),
-                            ),
-                            title: Text(
-                              '${quiz.courseName ?? 'Course'}: ${quiz.topic}',
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 14),
-                            ),
-                            subtitle: Text(
-                              'Date: ${DateFormat('EEE, MMM d • h:mm a').format(quiz.quizDate)}${quiz.venue.isNotEmpty ? ' • Venue: ${quiz.venue}' : ''}',
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete_outline_rounded,
-                                  color: Colors.grey, size: 20),
-                              onPressed: () async {
-                                await DatabaseHelper.instance.deleteQuiz(quiz.id!);
-                                _loadDashboardData();
-                              },
-                            ),
-                          ),
-                        );
-                      }),
-                    ],
-
-                    const SizedBox(height: 24),
                   ],
                 ),
               ),

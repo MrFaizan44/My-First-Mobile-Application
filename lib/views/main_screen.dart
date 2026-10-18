@@ -52,7 +52,7 @@ class _MainScreenState extends State<MainScreen> {
           NavigationDestination(
             icon: Icon(Icons.assignment_outlined),
             selectedIcon: Icon(Icons.assignment_rounded),
-            label: 'Assignments',
+            label: 'Tasks & Quizzes',
           ),
           NavigationDestination(
             icon: Icon(Icons.book_outlined),
