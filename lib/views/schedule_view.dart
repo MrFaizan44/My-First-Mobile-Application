@@ -13,7 +13,7 @@ class ScheduleView extends StatefulWidget {
   State<ScheduleView> createState() => _ScheduleViewState();
 }
 
-class _ScheduleViewState extends State<ScheduleView> {
+class _ScheduleViewState extends State<ScheduleView> with WidgetsBindingObserver {
   int _selectedDay = DateTime.now().weekday; // 1 = Monday, 7 = Sunday
   List<ScheduleBlockModel> _dayBlocks = [];
   bool _isLoading = true;
@@ -31,7 +31,25 @@ class _ScheduleViewState extends State<ScheduleView> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadScheduleForDay();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Automatically update selected day to current weekday whenever app resumes
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      setState(() {
+        _selectedDay = DateTime.now().weekday;
+      });
+      _loadScheduleForDay();
+    }
   }
 
   Future<void> _loadScheduleForDay() async {

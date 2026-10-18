@@ -22,7 +22,7 @@ class HomeView extends StatefulWidget {
   State<HomeView> createState() => _HomeViewState();
 }
 
-class _HomeViewState extends State<HomeView> {
+class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   String _studentName = 'Alex Rivers';
   List<SubjectModel> _courses = [];
   List<ScheduleBlockModel> _todaySchedule = [];
@@ -32,7 +32,22 @@ class _HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadDashboardData();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Automatically re-evaluate DateTime.now() whenever app resumes from background
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadDashboardData();
+    }
   }
 
   Future<void> _loadDashboardData() async {
@@ -297,7 +312,10 @@ class _HomeViewState extends State<HomeView> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  '${_todaySchedule.length} classes & ${_todayAssignments.length} pending tasks today.',
+                                  _buildTodaySummaryText(
+                                    _todaySchedule.length,
+                                    _todayAssignments.length,
+                                  ),
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: isDark
@@ -561,6 +579,19 @@ class _HomeViewState extends State<HomeView> {
     if (count == 0) return 'No classes today';
     if (count == 1) return '1 class today';
     return '$count classes today';
+  }
+
+  String _buildTodaySummaryText(int classesCount, int tasksCount) {
+    if (classesCount == 0 && tasksCount == 0) {
+      return 'No classes & no pending tasks today. All clear! 🎉';
+    }
+    final classStr = classesCount == 0
+        ? 'No classes'
+        : (classesCount == 1 ? '1 class' : '$classesCount classes');
+    final taskStr = tasksCount == 0
+        ? 'no pending tasks'
+        : (tasksCount == 1 ? '1 pending task' : '$tasksCount pending tasks');
+    return '$classStr & $taskStr today.';
   }
 
   String _getTodayDayName() {
