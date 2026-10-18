@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/schedule_block_model.dart';
 import '../database/database_helper.dart';
@@ -17,6 +18,7 @@ class _ScheduleViewState extends State<ScheduleView> with WidgetsBindingObserver
   int _selectedDay = DateTime.now().weekday; // 1 = Monday, 7 = Sunday
   List<ScheduleBlockModel> _dayBlocks = [];
   bool _isLoading = true;
+  Timer? _midnightTimer;
 
   final List<Map<String, dynamic>> _weekDays = const [
     {'label': 'Mon', 'day': 1},
@@ -33,10 +35,12 @@ class _ScheduleViewState extends State<ScheduleView> with WidgetsBindingObserver
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadScheduleForDay();
+    _scheduleMidnightUpdate();
   }
 
   @override
   void dispose() {
+    _midnightTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -49,7 +53,26 @@ class _ScheduleViewState extends State<ScheduleView> with WidgetsBindingObserver
         _selectedDay = DateTime.now().weekday;
       });
       _loadScheduleForDay();
+      _scheduleMidnightUpdate();
     }
+  }
+
+  /// Schedules a timer to trigger the exact second midnight hits
+  void _scheduleMidnightUpdate() {
+    _midnightTimer?.cancel();
+    final now = DateTime.now();
+    final nextMidnight = DateTime(now.year, now.month, now.day + 1);
+    final timeUntilMidnight = nextMidnight.difference(now);
+
+    _midnightTimer = Timer(timeUntilMidnight, () {
+      if (mounted) {
+        setState(() {
+          _selectedDay = DateTime.now().weekday;
+        });
+        _loadScheduleForDay();
+        _scheduleMidnightUpdate(); // Reschedule for following midnight
+      }
+    });
   }
 
   Future<void> _loadScheduleForDay() async {

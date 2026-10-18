@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -28,16 +29,19 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   List<ScheduleBlockModel> _todaySchedule = [];
   List<AssignmentModel> _todayAssignments = [];
   bool _isLoading = true;
+  Timer? _midnightTimer;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadDashboardData();
+    _scheduleMidnightUpdate();
   }
 
   @override
   void dispose() {
+    _midnightTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -47,7 +51,23 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _loadDashboardData();
+      _scheduleMidnightUpdate();
     }
+  }
+
+  /// Schedules a timer to trigger the exact second midnight hits
+  void _scheduleMidnightUpdate() {
+    _midnightTimer?.cancel();
+    final now = DateTime.now();
+    final nextMidnight = DateTime(now.year, now.month, now.day + 1);
+    final timeUntilMidnight = nextMidnight.difference(now);
+
+    _midnightTimer = Timer(timeUntilMidnight, () {
+      if (mounted) {
+        _loadDashboardData();
+        _scheduleMidnightUpdate(); // Reschedule for following midnight
+      }
+    });
   }
 
   Future<void> _loadDashboardData() async {
