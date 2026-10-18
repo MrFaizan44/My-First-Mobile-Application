@@ -1,0 +1,275 @@
+import 'package:flutter/material.dart';
+import '../models/subject_model.dart';
+import '../theme/app_theme.dart';
+import '../database/database_helper.dart';
+
+/// Modal Bottom Sheet form for creating or editing user-defined courses
+class AddCourseBottomSheet extends StatefulWidget {
+  final SubjectModel? initialCourse;
+  final VoidCallback onSaved;
+
+  const AddCourseBottomSheet({
+    super.key,
+    this.initialCourse,
+    required this.onSaved,
+  });
+
+  /// Helper static method to open the bottom sheet cleanly
+  static void show(
+    BuildContext context, {
+    SubjectModel? initialCourse,
+    required VoidCallback onSaved,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AddCourseBottomSheet(
+        initialCourse: initialCourse,
+        onSaved: onSaved,
+      ),
+    );
+  }
+
+  @override
+  State<AddCourseBottomSheet> createState() => _AddCourseBottomSheetState();
+}
+
+class _AddCourseBottomSheetState extends State<AddCourseBottomSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameController;
+  late TextEditingController _codeController;
+  late TextEditingController _instructorController;
+  late TextEditingController _locationController;
+  late Color _selectedColor;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController =
+        TextEditingController(text: widget.initialCourse?.name ?? '');
+    _codeController =
+        TextEditingController(text: widget.initialCourse?.code ?? '');
+    _instructorController =
+        TextEditingController(text: widget.initialCourse?.instructor ?? '');
+    _locationController =
+        TextEditingController(text: widget.initialCourse?.location ?? '');
+    _selectedColor = widget.initialCourse != null
+        ? widget.initialCourse!.color
+        : AppTheme.subjectColors[0];
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _codeController.dispose();
+    _instructorController.dispose();
+    _locationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveCourse() async {
+    if (_formKey.currentState!.validate()) {
+      final course = SubjectModel(
+        id: widget.initialCourse?.id,
+        name: _nameController.text.trim(),
+        code: _codeController.text.trim().toUpperCase(),
+        colorValue: _selectedColor.toARGB32(),
+        instructor: _instructorController.text.trim(),
+        location: _locationController.text.trim(),
+      );
+
+      if (widget.initialCourse == null) {
+        await DatabaseHelper.instance.insertSubject(course);
+      } else {
+        await DatabaseHelper.instance.updateSubject(course);
+      }
+
+      widget.onSaved();
+      if (mounted) Navigator.of(context).pop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: bottomInset + 20,
+      ),
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header title bar
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    widget.initialCourse == null ? 'Add New Course' : 'Edit Course',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, color: Colors.grey),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Course Name
+              TextFormField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                  labelText: 'Course Name *',
+                  hintText: 'e.g. Physics, Data Structures',
+                  prefixIcon: const Icon(Icons.book_outlined),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  isDense: true,
+                ),
+                validator: (val) =>
+                    val == null || val.trim().isEmpty ? 'Please enter a course name' : null,
+              ),
+              const SizedBox(height: 12),
+
+              // Course Code
+              TextFormField(
+                controller: _codeController,
+                decoration: InputDecoration(
+                  labelText: 'Course Code *',
+                  hintText: 'e.g. PHYS101, CS201',
+                  prefixIcon: const Icon(Icons.tag_rounded),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  isDense: true,
+                ),
+                validator: (val) =>
+                    val == null || val.trim().isEmpty ? 'Please enter a course code' : null,
+              ),
+              const SizedBox(height: 12),
+
+              // Instructor Name
+              TextFormField(
+                controller: _instructorController,
+                decoration: InputDecoration(
+                  labelText: 'Instructor Name',
+                  hintText: 'e.g. Dr. Sarah Jenkins',
+                  prefixIcon: const Icon(Icons.person_outline_rounded),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Room Number / Online Class Link
+              TextFormField(
+                controller: _locationController,
+                decoration: InputDecoration(
+                  labelText: 'Room Number / Online Link',
+                  hintText: 'e.g. Room 402B or https://meet.google.com/...',
+                  prefixIcon: const Icon(Icons.location_on_outlined),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Color Theme Selector
+              const Text(
+                'Select Color Theme:',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              Wrap(
+                spacing: 12,
+                runSpacing: 10,
+                children: AppTheme.subjectColors.map((color) {
+                  final bool isSelected =
+                      _selectedColor.toARGB32() == color.toARGB32();
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedColor = color;
+                      });
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: isSelected
+                            ? Border.all(color: color, width: 3)
+                            : Border.all(color: Colors.transparent, width: 3),
+                      ),
+                      child: CircleAvatar(
+                        backgroundColor: color,
+                        radius: 18,
+                        child: isSelected
+                            ? const Icon(Icons.check,
+                                color: Colors.white, size: 20)
+                            : null,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Submit Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _saveCourse,
+                  icon: const Icon(Icons.check_rounded, color: Colors.white),
+                  label: Text(
+                    widget.initialCourse == null ? 'Create Course' : 'Save Changes',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _selectedColor,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
