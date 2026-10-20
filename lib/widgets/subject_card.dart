@@ -29,7 +29,7 @@ class SubjectCard extends StatelessWidget {
         children: [
           // Top Color Accent Bar with Action Menu
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: courseColor.withAlpha(30),
               borderRadius:
@@ -40,11 +40,13 @@ class SubjectCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   backgroundColor: courseColor,
-                  radius: 8,
+                  radius: 7,
                 ),
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_horiz_rounded,
-                      color: Colors.grey, size: 20),
+                      color: Colors.grey, size: 18),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                   onSelected: (val) {
@@ -80,29 +82,32 @@ class SubjectCard extends StatelessWidget {
             ),
           ),
 
-          // Main Card Content Body
+          // Main Card Content Body with Overflow Prevention
           Expanded(
             child: Padding(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+                  const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    subject.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                  Flexible(
+                    child: Text(
+                      subject.name,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
                   if (subject.instructor.isNotEmpty)
                     Row(
                       children: [
                         const Icon(Icons.person_outline_rounded,
-                            size: 13, color: Colors.grey),
+                            size: 12, color: Colors.grey),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(

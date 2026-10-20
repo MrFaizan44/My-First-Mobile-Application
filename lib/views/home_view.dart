@@ -13,9 +13,9 @@ import '../widgets/timeline_schedule_card.dart';
 import '../widgets/swipe_assignment_card.dart';
 import '../widgets/add_course_bottom_sheet.dart';
 import '../widgets/course_details_bottom_sheet.dart';
-import '../widgets/edit_profile_dialog.dart';
 import '../widgets/study_tasker_logo.dart';
 import 'exams_view.dart';
+import 'settings_view.dart';
 
 /// Home Dashboard Tab for StudyTasker
 class HomeView extends StatefulWidget {
@@ -27,6 +27,7 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   String _studentName = 'Alex Rivers';
+  String _universityId = 'ST-2026-8942';
   List<SubjectModel> _courses = [];
   List<ScheduleBlockModel> _todaySchedule = [];
   List<AssignmentModel> _todayAssignments = [];
@@ -79,6 +80,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   Future<void> _loadDashboardData() async {
     final prefs = await SharedPreferences.getInstance();
     final savedName = prefs.getString('student_name') ?? 'Alex Rivers';
+    final savedId = prefs.getString('university_id') ?? 'ST-2026-8942';
 
     final courses = await DatabaseHelper.instance.getSubjects();
     final todayWeekday = DateTime.now().weekday; // 1 = Mon, 7 = Sun
@@ -105,6 +107,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     if (mounted) {
       setState(() {
         _studentName = savedName;
+        _universityId = savedId;
         _courses = courses;
         _todaySchedule = upcomingTodaySchedule;
         _todayAssignments = todayAssignments;
@@ -136,12 +139,12 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     );
   }
 
-  void _openEditProfileDialog() {
-    EditProfileDialog.show(
-      context,
-      currentName: _studentName,
-      onSaved: _loadDashboardData,
-    );
+  void _openSettings() {
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(builder: (context) => const SettingsView()),
+        )
+        .then((_) => _loadDashboardData());
   }
 
   Future<void> _toggleAssignmentCompletion(AssignmentModel assignment) async {
@@ -188,6 +191,17 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     );
   }
 
+  String _getTimeBasedGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Good Morning, $_studentName ☀️';
+    } else if (hour < 17) {
+      return 'Good Afternoon, $_studentName 🌤️';
+    } else {
+      return 'Good Evening, $_studentName 🌙';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeController = Provider.of<ThemeController>(context);
@@ -197,7 +211,6 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       appBar: AppBar(
         title: const StudyTaskerLogo(size: 26),
         actions: [
-          // Dedicated Exams Hub Action Button
           TextButton.icon(
             onPressed: _openExamsHub,
             icon: const Icon(Icons.assignment_turned_in_rounded,
@@ -212,6 +225,11 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
             ),
           ),
           IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+            onPressed: _openSettings,
+          ),
+          IconButton(
             icon: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               child: Icon(
@@ -223,7 +241,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
             tooltip: 'Toggle Theme',
             onPressed: () => themeController.toggleTheme(),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
         ],
       ),
       body: _isLoading
@@ -236,7 +254,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 1. Personalized Header Card
+                    // 1. Personalized Header Card displaying Name & University ID
                     Card(
                       elevation: 2,
                       color: AppTheme.primaryColor,
@@ -247,71 +265,42 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                         child: Row(
                           children: [
                             GestureDetector(
-                              onTap: _openEditProfileDialog,
-                              child: Stack(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 28,
-                                    backgroundColor: Colors.white,
-                                    child: Text(
-                                      _getInitials(_studentName),
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.primaryColor,
-                                      ),
-                                    ),
+                              onTap: _openSettings,
+                              child: CircleAvatar(
+                                radius: 26,
+                                backgroundColor: Colors.white,
+                                child: Text(
+                                  _getInitials(_studentName),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.primaryColor,
                                   ),
-                                  Positioned(
-                                    bottom: 0,
-                                    right: 0,
-                                    child: CircleAvatar(
-                                      radius: 10,
-                                      backgroundColor: AppTheme.brandIndigo,
-                                      child: const Icon(Icons.edit_rounded,
-                                          size: 10, color: Colors.white),
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
                             ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 14),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          'Hello, $_studentName 👋',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(
-                                            Icons.edit_note_rounded,
-                                            color: Colors.white70,
-                                            size: 22),
-                                        onPressed: _openEditProfileDialog,
-                                        tooltip: 'Edit Name',
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 2),
                                   Text(
-                                    '${_courses.length} Enrolled Courses • ${todayScheduleText(_todaySchedule.length)}',
+                                    _getTimeBasedGreeting(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'ID: $_universityId',
                                     style: TextStyle(
-                                      color: Colors.white.withAlpha(200),
-                                      fontSize: 12,
+                                      color: Colors.white.withAlpha(210),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ],
@@ -432,7 +421,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 1.1,
+                          childAspectRatio: 1.25,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),

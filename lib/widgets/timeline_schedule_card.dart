@@ -31,7 +31,7 @@ class TimelineScheduleCard extends StatelessWidget {
         children: [
           // Left Time Node Indicator with AM/PM formatting
           SizedBox(
-            width: 78,
+            width: 68,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -80,12 +80,12 @@ class TimelineScheduleCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
 
-          // Right Content Card
+          // Right Content Card with Overflow Prevention
           Expanded(
             child: CustomCard(
-              padding: const EdgeInsets.all(14.0),
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
               borderColor: courseColor.withAlpha(80),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,26 +93,34 @@ class TimelineScheduleCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: courseColor,
-                            radius: 5,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            block.subjectName ?? 'Course',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: courseColor,
+                              radius: 4,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                block.subjectName ?? 'Course',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       if (showMenu)
                         PopupMenuButton<String>(
                           icon: const Icon(Icons.more_horiz_rounded,
-                              color: Colors.grey, size: 20),
+                              color: Colors.grey, size: 18),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12)),
                           onSelected: (val) {
@@ -154,13 +162,17 @@ class TimelineScheduleCard extends StatelessWidget {
                     Row(
                       children: [
                         const Icon(Icons.person_outline_rounded,
-                            size: 13, color: Colors.grey),
+                            size: 12, color: Colors.grey),
                         const SizedBox(width: 4),
-                        Text(
-                          block.subjectInstructor!,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
+                        Expanded(
+                          child: Text(
+                            block.subjectInstructor!,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -172,13 +184,13 @@ class TimelineScheduleCard extends StatelessWidget {
                     Row(
                       children: [
                         const Icon(Icons.location_on_outlined,
-                            size: 13, color: AppTheme.brandIndigo),
+                            size: 12, color: AppTheme.brandIndigo),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             block.room,
                             style: const TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
                               color: AppTheme.brandIndigo,
                               fontWeight: FontWeight.bold,
                             ),

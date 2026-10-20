@@ -39,28 +39,34 @@ class NoteCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: courseColor.withAlpha(25),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: courseColor.withAlpha(60)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircleAvatar(backgroundColor: courseColor, radius: 4),
-                    const SizedBox(width: 6),
-                    Text(
-                      note.subjectName ?? 'Course',
-                      style: TextStyle(
-                        color: courseColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
+              Flexible(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: courseColor.withAlpha(25),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: courseColor.withAlpha(60)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircleAvatar(backgroundColor: courseColor, radius: 4),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          note.subjectName ?? 'Course',
+                          style: TextStyle(
+                            color: courseColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               PopupMenuButton<String>(
@@ -141,10 +147,14 @@ class NoteCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 4,
             children: [
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.calendar_today_rounded,
                       size: 12, color: Colors.grey),
@@ -164,6 +174,7 @@ class NoteCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.link_rounded,
                           size: 12, color: AppTheme.brandIndigo),
