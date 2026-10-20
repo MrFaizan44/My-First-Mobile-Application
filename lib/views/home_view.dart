@@ -26,7 +26,7 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
-  String _studentName = 'Alex Rivers';
+  String _studentName = '';
   String _universityId = 'ST-2026-8942';
   List<SubjectModel> _courses = [];
   List<ScheduleBlockModel> _todaySchedule = [];
@@ -79,7 +79,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
   Future<void> _loadDashboardData() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedName = prefs.getString('student_name') ?? 'Alex Rivers';
+    final savedName = prefs.getString('student_name') ?? '';
     final savedId = prefs.getString('university_id') ?? 'ST-2026-8942';
 
     final courses = await DatabaseHelper.instance.getSubjects();
@@ -193,6 +193,11 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
   String _getTimeBasedGreeting() {
     final hour = DateTime.now().hour;
+    if (_studentName.trim().isEmpty) {
+      if (hour < 12) return 'Good Morning! ☀️';
+      if (hour < 17) return 'Good Afternoon! 🌤️';
+      return 'Good Evening! 🌙';
+    }
     if (hour < 12) {
       return 'Good Morning, $_studentName ☀️';
     } else if (hour < 17) {
