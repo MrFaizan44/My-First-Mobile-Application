@@ -21,8 +21,8 @@ void main() {
       ),
     );
 
-    // Verify main landing screen logo and continue button
+    // Verify main splash landing screen logo and title
     expect(find.byType(StudyTaskerLogo), findsWidgets);
-    expect(find.textContaining('StudyTasker'), findsWidgets);
+    expect(find.textContaining('Opening StudyTasker...'), findsOneWidget);
   });
 }
