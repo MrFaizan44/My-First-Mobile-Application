@@ -240,6 +240,7 @@ class _AddClassSlotBottomSheetState extends State<AddClassSlotBottomSheet> {
               const SizedBox(height: 16),
 
               DropdownButtonFormField<SubjectModel>(
+                isExpanded: true,
                 initialValue: _selectedCourse,
                 decoration: InputDecoration(
                   labelText: 'Select Course *',
@@ -256,7 +257,13 @@ class _AddClassSlotBottomSheetState extends State<AddClassSlotBottomSheet> {
                       children: [
                         CircleAvatar(backgroundColor: course.color, radius: 6),
                         const SizedBox(width: 8),
-                        Text(course.name, style: const TextStyle(fontSize: 13)),
+                        Expanded(
+                          child: Text(
+                            course.name,
+                            style: const TextStyle(fontSize: 13),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
                   );
@@ -272,6 +279,7 @@ class _AddClassSlotBottomSheetState extends State<AddClassSlotBottomSheet> {
               const SizedBox(height: 14),
 
               DropdownButtonFormField<int>(
+                isExpanded: true,
                 initialValue: _selectedDay,
                 decoration: InputDecoration(
                   labelText: 'Day of Week *',

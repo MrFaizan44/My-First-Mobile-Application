@@ -209,12 +209,16 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
     return Scaffold(
       appBar: AppBar(
-        title: const StudyTaskerLogo(size: 26),
+        titleSpacing: 12,
+        title: const FittedBox(
+          fit: BoxFit.scaleDown,
+          child: StudyTaskerLogo(size: 24),
+        ),
         actions: [
           TextButton.icon(
             onPressed: _openExamsHub,
             icon: const Icon(Icons.assignment_turned_in_rounded,
-                size: 18, color: AppTheme.brandRose),
+                size: 16, color: AppTheme.brandRose),
             label: const Text(
               'Exams 🎓',
               style: TextStyle(
@@ -225,21 +229,9 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
+            icon: const Icon(Icons.settings_outlined, size: 22),
             tooltip: 'Settings',
             onPressed: _openSettings,
-          ),
-          IconButton(
-            icon: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: Icon(
-                isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                key: ValueKey<bool>(isDark),
-                color: isDark ? Colors.amber : AppTheme.primaryColor,
-              ),
-            ),
-            tooltip: 'Toggle Theme',
-            onPressed: () => themeController.toggleTheme(),
           ),
           const SizedBox(width: 4),
         ],

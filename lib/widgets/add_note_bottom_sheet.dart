@@ -236,6 +236,7 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
               const SizedBox(height: 16),
 
               DropdownButtonFormField<SubjectModel>(
+                isExpanded: true,
                 initialValue: _selectedCourse,
                 decoration: InputDecoration(
                   labelText: 'Select Course *',
@@ -252,7 +253,13 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
                       children: [
                         CircleAvatar(backgroundColor: course.color, radius: 6),
                         const SizedBox(width: 8),
-                        Text(course.name, style: const TextStyle(fontSize: 13)),
+                        Expanded(
+                          child: Text(
+                            course.name,
+                            style: const TextStyle(fontSize: 13),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
                   );

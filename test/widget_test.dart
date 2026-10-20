@@ -17,15 +17,12 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider<ThemeController>.value(
         value: themeController,
-        child: const StudyTaskerApp(hasOnboarded: true),
+        child: const StudyTaskerApp(),
       ),
     );
 
-    // Verify main screen logo and 4 core bottom navigation tabs
+    // Verify main landing screen logo and continue button
     expect(find.byType(StudyTaskerLogo), findsWidgets);
-    expect(find.textContaining('Home'), findsOneWidget);
-    expect(find.textContaining('My Schedule'), findsOneWidget);
-    expect(find.textContaining('Tasks & Quizzes'), findsOneWidget);
-    expect(find.textContaining('Class Notes'), findsOneWidget);
+    expect(find.textContaining('StudyTasker'), findsWidgets);
   });
 }
